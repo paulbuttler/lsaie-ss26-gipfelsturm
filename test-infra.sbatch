@@ -1,5 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=gipfel-infra
+#SBATCH --account=lsaie-ss26
+#SBATCH --partition=normal
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4
@@ -19,7 +21,7 @@ MASTER_PORT=25678
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 export TORCH_NCCL_AVOID_RECORD_STREAMS=1
 
-srun -lu --mpi=pmix --network=disable_rdzv_get --environment=alps3 \
+srun -lu --mpi=pmix --network=disable_rdzv_get --environment="./alps3.toml" \
     --cpus-per-task $SLURM_CPUS_PER_TASK --wait 60 \
     bash -c "torchrun \
         --nproc-per-node $SLURM_GPUS_PER_NODE \
