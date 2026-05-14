@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
@@ -9,9 +9,13 @@
 #
 # Steps:     required for train mode (e.g., 1000, 5000, 15000)
 # Nodes:     optional, default 4 (max 8)
+# GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
+# Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
+#            ./launch.sh throughput 8b 50 1 1            # single-GPU baseline
+#            ./launch.sh throughput 8b 50 1 1 flash      # single-GPU + FA backend
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -19,8 +23,21 @@ set -euo pipefail
 
 source "$(dirname "$0")/config.sh"
 
-MODE=${1:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes]}
-MODEL_SIZE=${2:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes]}
+MODE=${1:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [attn_backend]}
+MODEL_SIZE=${2:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [attn_backend]}
+
+GPUS_PER_NODE=${5:-4}
+case $GPUS_PER_NODE in
+    1|2|4) ;;
+    *) echo "Invalid gpus_per_node: $GPUS_PER_NODE. Choose: 1, 2, 4"; exit 1 ;;
+esac
+NUMA_BIND=0-$((GPUS_PER_NODE - 1))  # GH200: GPU i ↔ NUMA i
+
+ATTN_BACKEND=${6:-auto}
+case $ATTN_BACKEND in
+    auto|flash|fused|unfused|local) ;;
+    *) echo "Unknown attention backend: $ATTN_BACKEND. Choose: auto, flash, fused, unfused, local"; exit 1 ;;
+esac
 
 ################ Mode config ################
 case $MODE in
@@ -31,7 +48,8 @@ case $MODE in
         EVAL_INTERVAL=$TRAINING_STEPS
         EVAL_ITERS=0
         LR_WARMUP_ITERS=10
-        LOGGING_EXTRA=""
+        LOGGING_EXTRA="
+    --log-timers-to-tensorboard"
         WANDB=true
         ;;
     train)
@@ -87,7 +105,7 @@ esac
 
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -124,7 +142,7 @@ cat >> "$SCRIPT" << SBATCH_DIRECTIVES
 #SBATCH --error=logs/%x-%j.log
 #SBATCH --nodes=${NODES}
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=${GPUS_PER_NODE}
 #SBATCH --cpus-per-task=288
 #SBATCH --mem=460000
 #SBATCH --no-requeue
@@ -141,7 +159,7 @@ cat >> "$SCRIPT" << BODY_WORKDIR
 WORKDIR=${WORKDIR}
 MEGATRON_LM_DIR=\$WORKDIR/Megatron-LM
 DATA_PREFIX=/capstor/store/cscs/swissai/infra01/datasets/nvidia/Nemotron-ClimbMix/climbmix_small_megatron/climbmix_small
-DATASET_CACHE_DIR=/iopsstor/scratch/cscs/\$USER/gipfelsturm/cache
+DATASET_CACHE_DIR=\$WORKDIR/.cache/dataset
 BODY_WORKDIR
 
 cat >> "$SCRIPT" << CONFIGS
@@ -151,11 +169,12 @@ MBS=${MBS}
 GBS=${GBS}
 SEQ_LEN=${SEQ_LEN}
 TRAINING_STEPS=${TRAINING_STEPS}
+NUMA_BIND=${NUMA_BIND}
 
 # Logging
 PROJECT_NAME=gipfelsturm
 EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n
-LOG_DIR=/iopsstor/scratch/cscs/\$USER/gipfelsturm/\$PROJECT_NAME/\$EXP_NAME
+LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
 
@@ -171,19 +190,25 @@ export PYTHONPATH=$MEGATRON_LM_DIR:$PYTHONPATH
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 export TORCH_NCCL_AVOID_RECORD_STREAMS=1
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
-export TRITON_CACHE_DIR=/iopsstor/scratch/cscs/$USER/gipfelsturm/.triton_cache
-export TORCHINDUCTOR_CACHE_DIR=/iopsstor/scratch/cscs/$USER/gipfelsturm/.inductor_cache
+export TRITON_CACHE_DIR=$WORKDIR/.cache/triton
+export TORCHINDUCTOR_CACHE_DIR=$WORKDIR/.cache/inductor
 export OMP_NUM_THREADS=$((SLURM_CPUS_PER_TASK/SLURM_GPUS_PER_NODE))
+export NVTE_DEBUG=${NVTE_DEBUG:-1}
+export NVTE_DEBUG_LEVEL=${NVTE_DEBUG_LEVEL:-0}
 MASTER_ADDR=$(hostname)
 MASTER_PORT=25678
+
+SETUP
+
+cat >> "$SCRIPT" << TE_ARGS
 
 TRANSFORMER_ENGINE_ARGS=(
     --transformer-impl transformer_engine
     --use-precision-aware-optimizer
     --main-grads-dtype bf16
+    --attention-backend ${ATTN_BACKEND}
 )
-
-SETUP
+TE_ARGS
 
 cat >> "$SCRIPT" << MODEL
 NETWORK_SIZE_ARGS=(
@@ -316,7 +341,7 @@ WANDB_INSERT
 cat >> "$SCRIPT" << 'FOOTER'
 
 echo "CMD: $TRAINING_CMD"
-srun -lu --mpi=pmix --network=disable_rdzv_get --environment=alps3 --cpus-per-task $SLURM_CPUS_PER_TASK --wait 60 bash -c "numactl --membind=0-3 $TRAINING_CMD"
+srun -lu --mpi=pmix --network=disable_rdzv_get --environment=alps3 --cpus-per-task $SLURM_CPUS_PER_TASK --wait 60 bash -c "numactl --membind=$NUMA_BIND $TRAINING_CMD"
 
 echo "END TIME: $(date)"
 FOOTER

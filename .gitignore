@@ -1,3 +1,5 @@
 logs/
+runs/
+.cache/
 data/climbmix_small/
 config.sh
