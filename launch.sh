@@ -105,7 +105,7 @@ esac
 
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n$-{GPUS_PER_NODE}g-${ATTN_BACKEND}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
