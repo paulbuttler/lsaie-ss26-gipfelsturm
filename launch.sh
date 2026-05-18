@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [fp8]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
@@ -11,11 +11,15 @@
 # Nodes:     optional, default 4 (max 8)
 # GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
 # Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
+# FP8:       optional, default off. Choices: off, hybrid, e4m3
+#              hybrid = e4m3 fwd (weights/activations), e5m2 bwd (gradients) — recommended for training
+#              e4m3   = e4m3 everywhere (more aggressive, may reduce stability)
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
-#            ./launch.sh throughput 8b 50 1 1            # single-GPU baseline
-#            ./launch.sh throughput 8b 50 1 1 flash      # single-GPU + FA backend
+#            ./launch.sh throughput 8b 50 1 1             # single-GPU baseline
+#            ./launch.sh throughput 8b 50 1 1 flash       # single-GPU + FA backend
+#            ./launch.sh throughput 8b 50 1 1 auto hybrid # single-GPU + FP8
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -37,6 +41,12 @@ ATTN_BACKEND=${6:-auto}
 case $ATTN_BACKEND in
     auto|flash|fused|unfused|local) ;;
     *) echo "Unknown attention backend: $ATTN_BACKEND. Choose: auto, flash, fused, unfused, local"; exit 1 ;;
+esac
+
+FP8=${7:-off}
+case $FP8 in
+    off|hybrid|e4m3) ;;
+    *) echo "Unknown fp8 mode: $FP8. Choose: off, hybrid, e4m3"; exit 1 ;;
 esac
 
 ################ Mode config ################
@@ -105,7 +115,7 @@ esac
 
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}-fp8${FP8}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -207,8 +217,17 @@ TRANSFORMER_ENGINE_ARGS=(
     --use-precision-aware-optimizer
     --main-grads-dtype bf16
     --attention-backend ${ATTN_BACKEND}
-)
 TE_ARGS
+
+if [ "$FP8" != "off" ]; then
+cat >> "$SCRIPT" << FP8_ARGS
+    --fp8-format ${FP8}
+FP8_ARGS
+fi
+
+cat >> "$SCRIPT" << TE_ARGS_CLOSE
+)
+TE_ARGS_CLOSE
 
 cat >> "$SCRIPT" << MODEL
 NETWORK_SIZE_ARGS=(
