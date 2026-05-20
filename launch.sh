@@ -5,7 +5,7 @@
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
 #
-# Sizes:     125m, 350m, 760m, 1.5b, 3b, 8b
+# Sizes:     125m, 350m, 760m, 1.5b, 3b, 8b, 32b
 #
 # Steps:     required for train mode (e.g., 1000, 5000, 15000)
 # Nodes:     optional, default 4 (max 8)
@@ -20,6 +20,8 @@
 #            ./launch.sh throughput 8b 50 1 1             # single-GPU baseline
 #            ./launch.sh throughput 8b 50 1 1 flash       # single-GPU + FA backend
 #            ./launch.sh throughput 8b 50 1 1 auto hybrid # single-GPU + FP8
+#            ./launch.sh throughput 32b 50 1 4            # single-node TP=4 baseline
+#            ./launch.sh throughput 32b 50 1 4 auto hybrid # single-node TP=4 + FP8
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -82,6 +84,7 @@ case $MODE in
 esac
 
 ################ Model config ################
+TP=1
 case $MODEL_SIZE in
     125m)
         NUM_LAYERS=12;  HIDDEN=768;  FFN=2048;  HEADS=12; KV_HEADS=4
@@ -107,11 +110,20 @@ case $MODEL_SIZE in
         NUM_LAYERS=32; HIDDEN=4096; FFN=14336; HEADS=32; KV_HEADS=8
         MBS=2
         ;;
+    32b)
+        NUM_LAYERS=64; HIDDEN=5120; FFN=27648; HEADS=40; KV_HEADS=8
+        MBS=1; TP=4
+        ;;
     *)
-        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 8b"
+        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 8b, 32b"
         exit 1
         ;;
 esac
+
+if [ "$TP" -gt "$GPUS_PER_NODE" ]; then
+    echo "Error: $MODEL_SIZE requires TP=$TP but gpus_per_node=$GPUS_PER_NODE. Pass at least $TP GPUs/node."
+    exit 1
+fi
 
 GBS=256
 SEQ_LEN=4096
@@ -223,6 +235,15 @@ if [ "$FP8" != "off" ]; then
 cat >> "$SCRIPT" << FP8_ARGS
     --fp8-format ${FP8}
 FP8_ARGS
+# Write expandable_segments into sbatch — prevents fragmentation OOM during FP8 optimizer state init
+cat >> "$SCRIPT" << 'FP8_ALLOC'
+# expandable_segments lets the CUDA allocator defragment — required for FP8 to avoid OOM at optimizer init
+FP8_ALLOC_CONF="env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
+FP8_ALLOC
+else
+cat >> "$SCRIPT" << 'BF16_ALLOC'
+FP8_ALLOC_CONF=""
+BF16_ALLOC
 fi
 
 cat >> "$SCRIPT" << TE_ARGS_CLOSE
@@ -291,18 +312,24 @@ MIXED_PRECISION_ARGS=(
     --bf16
 )
 
+REST
+
+cat >> "$SCRIPT" << DIST_ARGS
 DISTRIBUTED_ARGS=(
-    --tensor-model-parallel-size 1
+    --tensor-model-parallel-size ${TP}
     --pipeline-model-parallel-size 1
     --use-distributed-optimizer
     --overlap-grad-reduce
     --overlap-param-gather
 )
 
+DIST_ARGS
+
+cat >> "$SCRIPT" << 'REST2'
 LOGGING_ARGS=(
     --log-throughput
     --log-progress
-REST
+REST2
 
 cat >> "$SCRIPT" << LOGGING_EXTRA
 ${LOGGING_EXTRA}
@@ -333,7 +360,7 @@ TORCHRUN_ARGS=(
     --tee 3
 )
 
-TRAINING_CMD="torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
+TRAINING_CMD="${FP8_ALLOC_CONF}torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
     ${TRANSFORMER_ENGINE_ARGS[@]} \
     ${NETWORK_SIZE_ARGS[@]} \
     ${TRAINING_ARGS[@]} \
@@ -368,4 +395,8 @@ FOOTER
 chmod +x "$SCRIPT"
 
 echo "Generated: $SCRIPT"
-sbatch "$SCRIPT"
+if [ "${DRYRUN:-0}" = "1" ]; then
+    echo "DRYRUN: skipping sbatch"
+else
+    sbatch "$SCRIPT"
+fi
