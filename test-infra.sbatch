@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --account=lsaie-ss26
 #SBATCH --job-name=gipfel-infra
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
