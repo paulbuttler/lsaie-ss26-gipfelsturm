@@ -1,21 +1,23 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
 #
-# Sizes:     125m, 350m, 760m, 1.5b, 3b, 8b
+# Sizes:     125m, 350m, 760m, 1.5b, 3b, 4b, 8b
 #
 # Steps:     required for train mode (e.g., 1000, 5000, 15000)
 # Nodes:     optional, default 4 (max 8)
 # GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
 # Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
+# Env:       optional, default alps3. EDF container name under ~/.edf/. E.g. alps3, alps3-fa3.
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
-#            ./launch.sh throughput 8b 50 1 1            # single-GPU baseline
-#            ./launch.sh throughput 8b 50 1 1 flash      # single-GPU + FA backend
+#            ./launch.sh throughput 4b 50 1 1                       # single-GPU baseline
+#            ./launch.sh throughput 4b 50 1 1 flash                 # single-GPU + FA2 backend
+#            ./launch.sh throughput 4b 50 1 1 flash alps3-fa3       # FA3 via alps3-fa3 container
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -39,12 +41,15 @@ case $ATTN_BACKEND in
     *) echo "Unknown attention backend: $ATTN_BACKEND. Choose: auto, flash, fused, unfused, local"; exit 1 ;;
 esac
 
+ENVIRONMENT=${7:-alps3}
+
 ################ Mode config ################
 case $MODE in
     throughput)
         TRAINING_STEPS=${3:-50}
         NODES=${4:-4}
         TIME=00:30:00
+        [ "$GPUS_PER_NODE" = "1" ] && TIME=01:00:00
         EVAL_INTERVAL=$TRAINING_STEPS
         EVAL_ITERS=0
         LR_WARMUP_ITERS=10
@@ -93,19 +98,23 @@ case $MODEL_SIZE in
         NUM_LAYERS=32; HIDDEN=3072; FFN=8192;  HEADS=24; KV_HEADS=8
         MBS=4
         ;;
+    4b)
+        NUM_LAYERS=32; HIDDEN=3456; FFN=9216;  HEADS=27; KV_HEADS=9
+        MBS=2
+        ;;
     8b)
         NUM_LAYERS=32; HIDDEN=4096; FFN=14336; HEADS=32; KV_HEADS=8
         MBS=2
         ;;
     *)
-        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 8b"
+        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 4b, 8b"
         exit 1
         ;;
 esac
 
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -150,7 +159,7 @@ SBATCH_DIRECTIVES
 
 cat >> "$SCRIPT" << 'BODY_HEAD'
 
-echo "START TIME: \$(date)"
+echo "START TIME: $(date)"
 
 ################ Configs ################
 BODY_HEAD
@@ -173,7 +182,7 @@ NUMA_BIND=${NUMA_BIND}
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -194,7 +203,7 @@ export TRITON_CACHE_DIR=$WORKDIR/.cache/triton
 export TORCHINDUCTOR_CACHE_DIR=$WORKDIR/.cache/inductor
 export OMP_NUM_THREADS=$((SLURM_CPUS_PER_TASK/SLURM_GPUS_PER_NODE))
 export NVTE_DEBUG=${NVTE_DEBUG:-1}
-export NVTE_DEBUG_LEVEL=${NVTE_DEBUG_LEVEL:-0}
+export NVTE_DEBUG_LEVEL=${NVTE_DEBUG_LEVEL:-1}
 MASTER_ADDR=$(hostname)
 MASTER_PORT=25678
 
@@ -338,12 +347,12 @@ cat >> "$SCRIPT" << WANDB_INSERT
 ${WANDB_BLOCK}
 WANDB_INSERT
 
-cat >> "$SCRIPT" << 'FOOTER'
+cat >> "$SCRIPT" << FOOTER
 
-echo "CMD: $TRAINING_CMD"
-srun -lu --mpi=pmix --network=disable_rdzv_get --environment=alps3 --cpus-per-task $SLURM_CPUS_PER_TASK --wait 60 bash -c "numactl --membind=$NUMA_BIND $TRAINING_CMD"
+echo "CMD: \$TRAINING_CMD"
+srun -lu --mpi=pmix --network=disable_rdzv_get --environment=${ENVIRONMENT} --cpus-per-task \$SLURM_CPUS_PER_TASK --wait 60 bash -c "numactl --membind=\$NUMA_BIND \$TRAINING_CMD"
 
-echo "END TIME: $(date)"
+echo "END TIME: \$(date)"
 FOOTER
 
 chmod +x "$SCRIPT"
