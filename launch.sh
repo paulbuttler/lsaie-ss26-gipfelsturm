@@ -142,7 +142,8 @@ if [ -n "${MBS_OVERRIDE:-}" ]; then
 fi
 MBS_SUFFIX=$( [ -n "${MBS_OVERRIDE:-}" ] && echo "-mbs${MBS}" || echo "" )
 RECOMPUTE_SUFFIX=$( [ "$RECOMPUTE" != "off" ] && echo "-recompute${RECOMPUTE}" || echo "" )
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}"
+TP_COMM_SUFFIX=$( [ "$TP" -gt 1 ] && echo "-tpcomm-seqpar" || echo "" )
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -211,7 +212,7 @@ NUMA_BIND=${NUMA_BIND}
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-${ATTN_BACKEND}-fp8${FP8}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -362,6 +363,7 @@ DISTRIBUTED_ARGS=(
     --use-distributed-optimizer
     --overlap-grad-reduce
     --overlap-param-gather
+    $( [ "${TP}" -gt 1 ] && echo "--sequence-parallel --tp-comm-overlap" )
 )
 
 DIST_ARGS
