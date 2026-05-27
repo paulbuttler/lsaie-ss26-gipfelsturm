@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment] [offload_layers] [mbs]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
@@ -12,12 +12,16 @@
 # GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
 # Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
 # Env:       optional, default alps3. EDF container name under ~/.edf/. E.g. alps3, alps3-fa3.
+# Offload:   optional, default 0. CPU-offload activations of the first N layers.
+# MBS:       optional. Override the per-size micro-batch-size preset.
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
 #            ./launch.sh throughput 4b 50 1 1                       # single-GPU baseline
 #            ./launch.sh throughput 4b 50 1 1 flash                 # single-GPU + FA2 backend
 #            ./launch.sh throughput 4b 50 1 1 flash alps3-fa3       # FA3 via alps3-fa3 container
+#            ./launch.sh throughput 8b 50 1 4 auto alps3 8          # 8B DP=4, offload 8 layers
+#            ./launch.sh throughput 8b 50 1 4 auto alps3 8 4        # ... and push MBS to 4
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -42,6 +46,8 @@ case $ATTN_BACKEND in
 esac
 
 ENVIRONMENT=${7:-alps3}
+OFFLOAD_LAYERS=${8:-0}   # coarse CPU activation offload of first N layers; 0 = off (default), max = num_layers-1
+MBS_OVERRIDE=${9:-}      # override per-size MBS preset, e.g., to push MBS=4 for 8B model (default: off)
 
 ################ Mode config ################
 case $MODE in
@@ -112,9 +118,14 @@ case $MODEL_SIZE in
         ;;
 esac
 
+MBS=${MBS_OVERRIDE:-$MBS}   # GBS must stay divisible by MBS*DP
+if [ "$OFFLOAD_LAYERS" -lt 0 ] || [ "$OFFLOAD_LAYERS" -ge "$NUM_LAYERS" ]; then
+    echo "Invalid offload_layers: $OFFLOAD_LAYERS. Must be 0..$((NUM_LAYERS - 1)) for $MODEL_SIZE"; exit 1
+fi
+
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-mbs${MBS}-off${OFFLOAD_LAYERS}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -132,6 +143,14 @@ else
 fi'
 else
     WANDB_BLOCK='export WANDB_MODE=disabled'
+fi
+
+################ Offload args ################
+# Memory-saving but throughput-negative where the model already fits.
+if [ "$OFFLOAD_LAYERS" -gt 0 ]; then
+    OFFLOAD_ARGS="--cpu-offloading-num-layers $OFFLOAD_LAYERS"
+else
+    OFFLOAD_ARGS=""
 fi
 
 ################ Generate script ################
@@ -179,10 +198,11 @@ GBS=${GBS}
 SEQ_LEN=${SEQ_LEN}
 TRAINING_STEPS=${TRAINING_STEPS}
 NUMA_BIND=${NUMA_BIND}
+OFFLOAD_ARGS="${OFFLOAD_ARGS}"
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-mbs${MBS}-off${OFFLOAD_LAYERS}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -332,6 +352,7 @@ TRAINING_CMD="torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
     ${INITIALIZATION_ARGS[@]} \
     ${MIXED_PRECISION_ARGS[@]} \
     ${DISTRIBUTED_ARGS[@]} \
+    $OFFLOAD_ARGS \
     ${LOGGING_ARGS[@]} \
     ${TOKENIZER_ARGS[@]} \
     ${DATA_ARGS[@]}"
