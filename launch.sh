@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment] [fp8] [recompute]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [mbs] [fp8] [recompute] [offload_layers] [environment]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
@@ -11,31 +11,40 @@
 # Nodes:     optional, default 4 (max 8)
 # GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
 # Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
-# Env:       optional, default alps3. EDF container name under ~/.edf/. E.g. alps3, alps3-fa3.
+# MBS:       optional. Override the per-size micro-batch-size preset. Pass "" to skip when setting later args.
 # FP8:       optional, default off. Choices: off, hybrid, e4m3
 #              hybrid = e4m3 fwd (weights/activations), e5m2 bwd (gradients) — recommended for training
 #              e4m3   = e4m3 everywhere (more aggressive, may reduce stability)
 # Recompute: optional, default off. Choices: off, selective, full
 #              selective = recompute only attention softmax (saves ~30% activation mem, minimal overhead)
 #              full      = recompute all activations per layer (saves ~70% activation mem, ~10-15% throughput cost)
+# Offload:   optional, default 0. CPU-offload activations of the first N layers.
+# Env:       optional, default alps3. EDF container name under ~/.edf/. E.g. alps3, alps3-fa3.
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
-#            ./launch.sh throughput 4b 50 1 1                        # single-GPU baseline
-#            ./launch.sh throughput 4b 50 1 1 flash                  # single-GPU + FA2 backend
-#            ./launch.sh throughput 4b 50 1 1 flash alps3-fa3        # FA3 via alps3-fa3 container
-#            ./launch.sh throughput 8b 50 1 1 auto hybrid            # single-GPU + FP8
-#            ./launch.sh throughput 32b 50 1 4                       # single-node TP=4 baseline
-#            ./launch.sh throughput 32b 50 2 4 auto hybrid full      # 2-node TP=4 FP8 + full recompute
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
+
+#            ./launch.sh throughput 3b 50 1 1 auto 2                            # 3B single-GPU baseline
+#            ./launch.sh throughput 3b 50 1 1 flash 2                           # FA2 backend
+#            ./launch.sh throughput 3b 50 1 1 flash 2 off off 0 alps3-fa3       # FA3 via alps3-fa3 container
+#            ./launch.sh throughput 3b 50 1 1 auto 4 off off 12                 # offload 12 layers to fit MBS=4
+
+#            ./launch.sh throughput 8b 50 1 4 auto 2                            # 8B single-node baseline (DP=4)
+#            ./launch.sh throughput 8b 50 1 4 auto 1 hybrid                     # FP8 at MBS=1 
+#            ./launch.sh throughput 8b 50 1 4 auto 4 off off 16                 # offload 16 layers and push MBS to 4
+
+#            ./launch.sh throughput 32b 50 2 4 auto                             # 32B 2-node TP=4 baseline (DP=2)
+#            ./launch.sh throughput 32b 50 2 4 auto "" hybrid full              # FP8 + full recompute
+#            ./launch.sh throughput 32b 50 2 4 auto "" hybrid off 32            # FP8 + offload 32 layers
 
 set -euo pipefail
 
 source "$(dirname "$0")/config.sh"
 
-MODE=${1:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [attn_backend]}
-MODEL_SIZE=${2:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [attn_backend]}
+MODE=${1:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [mbs] [fp8] [recompute] [offload_layers] [environment]}
+MODEL_SIZE=${2:?Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [mbs] [fp8] [recompute] [offload_layers] [environment]}
 
 GPUS_PER_NODE=${5:-4}
 case $GPUS_PER_NODE in
@@ -50,7 +59,7 @@ case $ATTN_BACKEND in
     *) echo "Unknown attention backend: $ATTN_BACKEND. Choose: auto, flash, fused, unfused, local"; exit 1 ;;
 esac
 
-ENVIRONMENT=${7:-alps3}
+MBS_OVERRIDE=${7:-}       # override per-size MBS preset, e.g., to push MBS=4 for 8B model (default: off)
 
 FP8=${8:-off}
 case $FP8 in
@@ -63,6 +72,9 @@ case $RECOMPUTE in
     off|selective|full) ;;
     *) echo "Unknown recompute mode: $RECOMPUTE. Choose: off, selective, full"; exit 1 ;;
 esac
+OFFLOAD_LAYERS=${10:-0}   # coarse CPU activation offload of first N layers; 0 = off (default), max = num_layers-1
+
+ENVIRONMENT=${11:-alps3}
 
 ################ Mode config ################
 case $MODE in
@@ -143,16 +155,16 @@ if [ "$TP" -gt "$GPUS_PER_NODE" ]; then
     exit 1
 fi
 
+MBS=${MBS_OVERRIDE:-$MBS}   # GBS must stay divisible by MBS*DP
+if [ "$OFFLOAD_LAYERS" -lt 0 ] || [ "$OFFLOAD_LAYERS" -ge "$NUM_LAYERS" ]; then
+    echo "Invalid offload_layers: $OFFLOAD_LAYERS. Must be 0..$((NUM_LAYERS - 1)) for $MODEL_SIZE"; exit 1
+fi
+
 GBS=256
 SEQ_LEN=4096
-# MBS_OVERRIDE env var lets you test non-default batch sizes without editing model configs
-if [ -n "${MBS_OVERRIDE:-}" ]; then
-    MBS=${MBS_OVERRIDE}
-fi
-MBS_SUFFIX=$( [ -n "${MBS_OVERRIDE:-}" ] && echo "-mbs${MBS}" || echo "" )
 RECOMPUTE_SUFFIX=$( [ "$RECOMPUTE" != "off" ] && echo "-recompute${RECOMPUTE}" || echo "" )
 TP_COMM_SUFFIX=$( [ "$TP" -gt 1 ] && echo "-tpcomm-seqpar" || echo "" )
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-mbs${MBS}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}-off${OFFLOAD_LAYERS}-${ENVIRONMENT}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -170,6 +182,14 @@ else
 fi'
 else
     WANDB_BLOCK='export WANDB_MODE=disabled'
+fi
+
+################ Offload args ################
+# Memory-saving but throughput-negative where the model already fits.
+if [ "$OFFLOAD_LAYERS" -gt 0 ]; then
+    OFFLOAD_ARGS="--cpu-offloading-num-layers $OFFLOAD_LAYERS"
+else
+    OFFLOAD_ARGS=""
 fi
 
 ################ Generate script ################
@@ -218,10 +238,11 @@ GBS=${GBS}
 SEQ_LEN=${SEQ_LEN}
 TRAINING_STEPS=${TRAINING_STEPS}
 NUMA_BIND=${NUMA_BIND}
+OFFLOAD_ARGS="${OFFLOAD_ARGS}"
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-mbs${MBS}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}-off${OFFLOAD_LAYERS}-${ENVIRONMENT}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -241,8 +262,8 @@ export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export TRITON_CACHE_DIR=$WORKDIR/.cache/triton
 export TORCHINDUCTOR_CACHE_DIR=$WORKDIR/.cache/inductor
 export OMP_NUM_THREADS=$((SLURM_CPUS_PER_TASK/SLURM_GPUS_PER_NODE))
-export NVTE_DEBUG=${NVTE_DEBUG:-1}
-export NVTE_DEBUG_LEVEL=${NVTE_DEBUG_LEVEL:-1}
+export NVTE_DEBUG=${NVTE_DEBUG:-0}
+export NVTE_DEBUG_LEVEL=${NVTE_DEBUG_LEVEL:-0}
 MASTER_ADDR=$(hostname)
 MASTER_PORT=25678
 
@@ -267,17 +288,18 @@ cat >> "$SCRIPT" << TE_ARGS_CLOSE
 )
 TE_ARGS_CLOSE
 
-# FP8_ALLOC_CONF must be set after the array closes — it prefixes the torchrun command
-if [ "$FP8" != "off" ]; then
-cat >> "$SCRIPT" << 'FP8_ALLOC'
-# expandable_segments lets the CUDA allocator defragment — required for FP8 to avoid OOM at optimizer init
-FP8_ALLOC_CONF="env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
-FP8_ALLOC
-else
-cat >> "$SCRIPT" << 'BF16_ALLOC'
-FP8_ALLOC_CONF=""
-BF16_ALLOC
-fi
+# torchrun env-var prefix. --environment=<edf> strips host env, so vars must ride on the
+# torchrun command line. PYTORCH_CUDA_ALLOC_CONF=expandable_segments avoids FP8 optimizer-init OOM.
+# UB_SKIPMC=1 disables CUDA Multicast (unsupported on Clariden RDMA), required for TP>1.
+TORCHRUN_ENV_VARS=""
+[ "$FP8" != "off" ] && TORCHRUN_ENV_VARS+="PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
+[ "$TP" -gt 1 ]    && TORCHRUN_ENV_VARS+="UB_SKIPMC=1 "
+TORCHRUN_ENV_PREFIX=""
+[ -n "$TORCHRUN_ENV_VARS" ] && TORCHRUN_ENV_PREFIX="env $TORCHRUN_ENV_VARS"
+
+cat >> "$SCRIPT" << TORCHRUN_ENV_BLOCK
+TORCHRUN_ENV_PREFIX="${TORCHRUN_ENV_PREFIX}"
+TORCHRUN_ENV_BLOCK
 
 cat >> "$SCRIPT" << MODEL
 NETWORK_SIZE_ARGS=(
@@ -412,7 +434,7 @@ TORCHRUN_ARGS=(
     --tee 3
 )
 
-TRAINING_CMD="${FP8_ALLOC_CONF}torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
+TRAINING_CMD="${TORCHRUN_ENV_PREFIX}torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
     ${TRANSFORMER_ENGINE_ARGS[@]} \
     ${NETWORK_SIZE_ARGS[@]} \
     ${TRAINING_ARGS[@]} \
@@ -422,6 +444,7 @@ TRAINING_CMD="${FP8_ALLOC_CONF}torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pre
     ${INITIALIZATION_ARGS[@]} \
     ${MIXED_PRECISION_ARGS[@]} \
     ${DISTRIBUTED_ARGS[@]} \
+    $OFFLOAD_ARGS \
     ${LOGGING_ARGS[@]} \
     ${TOKENIZER_ARGS[@]} \
     ${DATA_ARGS[@]}"
