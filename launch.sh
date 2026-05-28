@@ -1,23 +1,32 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [environment] [fp8] [recompute]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
 #
-# Sizes:     125m, 350m, 760m, 1.5b, 3b, 4b, 8b
+# Sizes:     125m, 350m, 760m, 1.5b, 3b, 4b, 8b, 32b
 #
 # Steps:     required for train mode (e.g., 1000, 5000, 15000)
 # Nodes:     optional, default 4 (max 8)
 # GPUs/node: optional, default 4. Choices: 1, 2, 4. Use 1 for single-GPU baselines.
 # Attn:      optional, default auto. Choices: auto, flash, fused, unfused, local
 # Env:       optional, default alps3. EDF container name under ~/.edf/. E.g. alps3, alps3-fa3.
+# FP8:       optional, default off. Choices: off, hybrid, e4m3
+#              hybrid = e4m3 fwd (weights/activations), e5m2 bwd (gradients) — recommended for training
+#              e4m3   = e4m3 everywhere (more aggressive, may reduce stability)
+# Recompute: optional, default off. Choices: off, selective, full
+#              selective = recompute only attention softmax (saves ~30% activation mem, minimal overhead)
+#              full      = recompute all activations per layer (saves ~70% activation mem, ~10-15% throughput cost)
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
-#            ./launch.sh throughput 4b 50 1 1                       # single-GPU baseline
-#            ./launch.sh throughput 4b 50 1 1 flash                 # single-GPU + FA2 backend
-#            ./launch.sh throughput 4b 50 1 1 flash alps3-fa3       # FA3 via alps3-fa3 container
+#            ./launch.sh throughput 4b 50 1 1                        # single-GPU baseline
+#            ./launch.sh throughput 4b 50 1 1 flash                  # single-GPU + FA2 backend
+#            ./launch.sh throughput 4b 50 1 1 flash alps3-fa3        # FA3 via alps3-fa3 container
+#            ./launch.sh throughput 8b 50 1 1 auto hybrid            # single-GPU + FP8
+#            ./launch.sh throughput 32b 50 1 4                       # single-node TP=4 baseline
+#            ./launch.sh throughput 32b 50 2 4 auto hybrid full      # 2-node TP=4 FP8 + full recompute
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -42,6 +51,18 @@ case $ATTN_BACKEND in
 esac
 
 ENVIRONMENT=${7:-alps3}
+
+FP8=${8:-off}
+case $FP8 in
+    off|hybrid|e4m3) ;;
+    *) echo "Unknown fp8 mode: $FP8. Choose: off, hybrid, e4m3"; exit 1 ;;
+esac
+
+RECOMPUTE=${9:-off}
+case $RECOMPUTE in
+    off|selective|full) ;;
+    *) echo "Unknown recompute mode: $RECOMPUTE. Choose: off, selective, full"; exit 1 ;;
+esac
 
 ################ Mode config ################
 case $MODE in
@@ -77,6 +98,7 @@ case $MODE in
 esac
 
 ################ Model config ################
+TP=1
 case $MODEL_SIZE in
     125m)
         NUM_LAYERS=12;  HIDDEN=768;  FFN=2048;  HEADS=12; KV_HEADS=4
@@ -106,15 +128,31 @@ case $MODEL_SIZE in
         NUM_LAYERS=32; HIDDEN=4096; FFN=14336; HEADS=32; KV_HEADS=8
         MBS=2
         ;;
+    32b)
+        NUM_LAYERS=64; HIDDEN=5120; FFN=27648; HEADS=40; KV_HEADS=8
+        MBS=1; TP=4
+        ;;
     *)
-        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 4b, 8b"
+        echo "Unknown model size: $MODEL_SIZE. Choose: 125m, 350m, 760m, 1.5b, 3b, 4b, 8b, 32b"
         exit 1
         ;;
 esac
 
+if [ "$TP" -gt "$GPUS_PER_NODE" ]; then
+    echo "Error: $MODEL_SIZE requires TP=$TP but gpus_per_node=$GPUS_PER_NODE. Pass at least $TP GPUs/node."
+    exit 1
+fi
+
 GBS=256
 SEQ_LEN=4096
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}"
+# MBS_OVERRIDE env var lets you test non-default batch sizes without editing model configs
+if [ -n "${MBS_OVERRIDE:-}" ]; then
+    MBS=${MBS_OVERRIDE}
+fi
+MBS_SUFFIX=$( [ -n "${MBS_OVERRIDE:-}" ] && echo "-mbs${MBS}" || echo "" )
+RECOMPUTE_SUFFIX=$( [ "$RECOMPUTE" != "off" ] && echo "-recompute${RECOMPUTE}" || echo "" )
+TP_COMM_SUFFIX=$( [ "$TP" -gt 1 ] && echo "-tpcomm-seqpar" || echo "" )
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -155,6 +193,7 @@ cat >> "$SCRIPT" << SBATCH_DIRECTIVES
 #SBATCH --cpus-per-task=288
 #SBATCH --mem=460000
 #SBATCH --no-requeue
+#SBATCH --chdir=${WORKDIR}
 SBATCH_DIRECTIVES
 
 cat >> "$SCRIPT" << 'BODY_HEAD'
@@ -182,7 +221,7 @@ NUMA_BIND=${NUMA_BIND}
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-\${SLURM_GPUS_PER_NODE}g-${ATTN_BACKEND}-${ENVIRONMENT}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -216,8 +255,29 @@ TRANSFORMER_ENGINE_ARGS=(
     --use-precision-aware-optimizer
     --main-grads-dtype bf16
     --attention-backend ${ATTN_BACKEND}
-)
 TE_ARGS
+
+if [ "$FP8" != "off" ]; then
+cat >> "$SCRIPT" << FP8_ARGS
+    --fp8-format ${FP8}
+FP8_ARGS
+fi
+
+cat >> "$SCRIPT" << TE_ARGS_CLOSE
+)
+TE_ARGS_CLOSE
+
+# FP8_ALLOC_CONF must be set after the array closes — it prefixes the torchrun command
+if [ "$FP8" != "off" ]; then
+cat >> "$SCRIPT" << 'FP8_ALLOC'
+# expandable_segments lets the CUDA allocator defragment — required for FP8 to avoid OOM at optimizer init
+FP8_ALLOC_CONF="env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
+FP8_ALLOC
+else
+cat >> "$SCRIPT" << 'BF16_ALLOC'
+FP8_ALLOC_CONF=""
+BF16_ALLOC
+fi
 
 cat >> "$SCRIPT" << MODEL
 NETWORK_SIZE_ARGS=(
@@ -253,7 +313,29 @@ TRAINING_ARGS=(
     --manual-gc
     --manual-gc-interval 50
 )
+TRAINING
 
+if [ "$RECOMPUTE" = "selective" ]; then
+cat >> "$SCRIPT" << 'RECOMPUTE_SELECTIVE'
+RECOMPUTE_ARGS=(
+    --recompute-granularity selective
+)
+RECOMPUTE_SELECTIVE
+elif [ "$RECOMPUTE" = "full" ]; then
+cat >> "$SCRIPT" << 'RECOMPUTE_FULL'
+RECOMPUTE_ARGS=(
+    --recompute-granularity full
+    --recompute-method uniform
+    --recompute-num-layers 1
+)
+RECOMPUTE_FULL
+else
+cat >> "$SCRIPT" << 'RECOMPUTE_OFF'
+RECOMPUTE_ARGS=()
+RECOMPUTE_OFF
+fi
+
+cat >> "$SCRIPT" << REGULARIZATION
 REGULARIZATION_ARGS=(
     --attention-dropout 0.0
     --hidden-dropout 0.0
@@ -268,7 +350,7 @@ LEARNING_RATE_ARGS=(
     --lr-decay-style constant
     --lr-warmup-iters ${LR_WARMUP_ITERS}
 )
-TRAINING
+REGULARIZATION
 
 cat >> "$SCRIPT" << 'REST'
 
@@ -281,18 +363,25 @@ MIXED_PRECISION_ARGS=(
     --bf16
 )
 
+REST
+
+cat >> "$SCRIPT" << DIST_ARGS
 DISTRIBUTED_ARGS=(
-    --tensor-model-parallel-size 1
+    --tensor-model-parallel-size ${TP}
     --pipeline-model-parallel-size 1
     --use-distributed-optimizer
     --overlap-grad-reduce
     --overlap-param-gather
+    $( [ "${TP}" -gt 1 ] && echo "--sequence-parallel --tp-comm-overlap" )
 )
 
+DIST_ARGS
+
+cat >> "$SCRIPT" << 'REST2'
 LOGGING_ARGS=(
     --log-throughput
     --log-progress
-REST
+REST2
 
 cat >> "$SCRIPT" << LOGGING_EXTRA
 ${LOGGING_EXTRA}
@@ -323,10 +412,11 @@ TORCHRUN_ARGS=(
     --tee 3
 )
 
-TRAINING_CMD="torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
+TRAINING_CMD="${FP8_ALLOC_CONF}torchrun ${TORCHRUN_ARGS[@]} $MEGATRON_LM_DIR/pretrain_gpt.py \
     ${TRANSFORMER_ENGINE_ARGS[@]} \
     ${NETWORK_SIZE_ARGS[@]} \
     ${TRAINING_ARGS[@]} \
+    ${RECOMPUTE_ARGS[@]} \
     ${REGULARIZATION_ARGS[@]} \
     ${LEARNING_RATE_ARGS[@]} \
     ${INITIALIZATION_ARGS[@]} \
@@ -358,4 +448,8 @@ FOOTER
 chmod +x "$SCRIPT"
 
 echo "Generated: $SCRIPT"
-sbatch "$SCRIPT"
+if [ "${DRYRUN:-0}" = "1" ]; then
+    echo "DRYRUN: skipping sbatch"
+else
+    sbatch "$SCRIPT"
+fi
