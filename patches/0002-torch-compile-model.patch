@@ -1,0 +1,42 @@
+diff --git a/megatron/training/arguments.py b/megatron/training/arguments.py
+index 46f3c28b1..3e65f3c85 100644
+--- a/megatron/training/arguments.py
++++ b/megatron/training/arguments.py
+@@ -2096,6 +2096,11 @@ def _add_training_args(parser):
+                        help='The communicator group names to use high priority streams.')
+     group.add_argument('--disable-jit-fuser', action='store_true',
+                        help='Disable the JIT fuser.')
++    group.add_argument('--torch-compile', action='store_true',
++                       help='Compile the full model with torch.compile.')
++    group.add_argument('--torch-compile-mode', type=str, default='reduce-overhead',
++                       choices=['reduce-overhead', 'max-autotune'],
++                       help='torch.compile mode to use for full-model compilation.')
+ 
+     return parser
+ 
+diff --git a/megatron/training/training.py b/megatron/training/training.py
+index d61b9357a..fc0d1e357 100644
+--- a/megatron/training/training.py
++++ b/megatron/training/training.py
+@@ -1273,6 +1273,12 @@ def get_model(model_provider_func, model_type=ModelType.encoder_or_decoder, wrap
+     # After TE2.x: Below function is an empty function and does nothing.
+     correct_amax_history_if_needed(model)
+ 
++    if args.torch_compile:
++        model = [
++            torch.compile(model_chunk, mode=args.torch_compile_mode, fullgraph=False)
++            for model_chunk in model
++        ]
++
+     if wrap_with_ddp:
+         if args.use_torch_fsdp2:
+             assert HAVE_FSDP2, "Torch FSDP2 requires torch>=2.4.0"
+@@ -2783,6 +2789,8 @@ def train(
+                 buffered_rollouts = train_data_iterator
+ 
+         ft_integration.on_training_step_start()
++        if args.torch_compile:
++            torch.compiler.cudagraph_mark_step_begin()
+         (
+             loss_dict,
+             skipped_iter,

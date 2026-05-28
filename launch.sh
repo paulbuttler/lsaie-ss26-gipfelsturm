@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [fp8] [recompute]
+# Usage: ./launch.sh <mode> <model_size> [steps] [nodes] [gpus_per_node] [attn_backend] [fp8] [recompute] [compile]
 #
 # Modes:     throughput  (50 steps, with W&B)
 #            train       (N steps, with W&B and Tensorboard)
@@ -17,6 +17,7 @@
 # Recompute: optional, default off. Choices: off, selective, full
 #              selective = recompute only attention softmax (saves ~30% activation mem, minimal overhead)
 #              full      = recompute all activations per layer (saves ~70% activation mem, ~10-15% throughput cost)
+# Compile:   optional, default off. Choices: off, on
 #
 # Examples:  ./launch.sh throughput 760m
 #            ./launch.sh throughput 8b 50 1
@@ -24,7 +25,7 @@
 #            ./launch.sh throughput 8b 50 1 1 flash       # single-GPU + FA backend
 #            ./launch.sh throughput 8b 50 1 1 auto hybrid # single-GPU + FP8
 #            ./launch.sh throughput 32b 50 1 4            # single-node TP=4 baseline
-#            ./launch.sh throughput 32b 50 2 4 auto hybrid full # 2-node TP=4 FP8 + full recompute
+#            ./launch.sh throughput 32b 50 2 4 auto hybrid full on # 2-node TP=4 FP8 + full recompute + torch.compile
 #            ./launch.sh train 760m 5000
 #            ./launch.sh train 1.5b 3000 8
 
@@ -60,6 +61,12 @@ case $RECOMPUTE in
     *) echo "Unknown recompute mode: $RECOMPUTE. Choose: off, selective, full"; exit 1 ;;
 esac
 
+COMPILE=${9:-off}
+case $COMPILE in
+    off|on) ;;
+    *) echo "Unknown compile mode: $COMPILE. Choose: off, on"; exit 1 ;;
+esac
+
 ################ Mode config ################
 case $MODE in
     throughput)
@@ -91,6 +98,9 @@ case $MODE in
         exit 1
         ;;
 esac
+
+# Compile jobs need extra walltime for first-run Triton/inductor compilation
+[ "$COMPILE" = "on" ] && TIME=02:00:00
 
 ################ Model config ################
 TP=1
@@ -142,8 +152,9 @@ if [ -n "${MBS_OVERRIDE:-}" ]; then
 fi
 MBS_SUFFIX=$( [ -n "${MBS_OVERRIDE:-}" ] && echo "-mbs${MBS}" || echo "" )
 RECOMPUTE_SUFFIX=$( [ "$RECOMPUTE" != "off" ] && echo "-recompute${RECOMPUTE}" || echo "" )
+COMPILE_SUFFIX=$( [ "$COMPILE" = "on" ] && echo "-compile" || echo "" )
 TP_COMM_SUFFIX=$( [ "$TP" -gt 1 ] && echo "-tpcomm-seqpar" || echo "" )
-JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}"
+JOB_NAME="gipfel-${MODE}-${MODEL_SIZE}${MBS_SUFFIX}-${TRAINING_STEPS}s-${NODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${COMPILE_SUFFIX}${TP_COMM_SUFFIX}"
 
 ################ W&B block ################
 if [ "$WANDB" = true ]; then
@@ -212,7 +223,7 @@ NUMA_BIND=${NUMA_BIND}
 
 # Logging
 PROJECT_NAME=gipfelsturm
-EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${TP_COMM_SUFFIX}
+EXP_NAME=${MODE}-${MODEL_SIZE}-\${SLURM_NNODES}n-${ATTN_BACKEND}-fp8${FP8}${RECOMPUTE_SUFFIX}${COMPILE_SUFFIX}${TP_COMM_SUFFIX}
 LOG_DIR=\$WORKDIR/runs/\$PROJECT_NAME/\$EXP_NAME
 TENSORBOARD_DIR=\$LOG_DIR/tensorboard
 CONFIGS
@@ -254,21 +265,26 @@ cat >> "$SCRIPT" << FP8_ARGS
 FP8_ARGS
 fi
 
+if [ "$COMPILE" = "on" ]; then
+cat >> "$SCRIPT" << 'COMPILE_ARGS'
+    --torch-compile
+    --torch-compile-mode reduce-overhead
+COMPILE_ARGS
+fi
+
 cat >> "$SCRIPT" << TE_ARGS_CLOSE
 )
 TE_ARGS_CLOSE
 
-# FP8_ALLOC_CONF must be set after the array closes — it prefixes the torchrun command
-if [ "$FP8" != "off" ]; then
-cat >> "$SCRIPT" << 'FP8_ALLOC'
-# expandable_segments lets the CUDA allocator defragment — required for FP8 to avoid OOM at optimizer init
-FP8_ALLOC_CONF="env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
-FP8_ALLOC
-else
-cat >> "$SCRIPT" << 'BF16_ALLOC'
-FP8_ALLOC_CONF=""
-BF16_ALLOC
-fi
+# Build env prefix for torchrun; alps3 strips host env — only "env VAR=val cmd" form works
+_ENV_VARS=""
+[ "$FP8" != "off" ] && _ENV_VARS="${_ENV_VARS}PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "
+[ "$TP" -gt 1 ]      && _ENV_VARS="${_ENV_VARS}UB_SKIPMC=1 "
+[ -n "$_ENV_VARS" ] && _ENV_PREFIX="env ${_ENV_VARS}" || _ENV_PREFIX=""
+
+cat >> "$SCRIPT" << ALLOC_CONF
+FP8_ALLOC_CONF="${_ENV_PREFIX}"
+ALLOC_CONF
 
 cat >> "$SCRIPT" << MODEL
 NETWORK_SIZE_ARGS=(
