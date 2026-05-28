@@ -1,0 +1,387 @@
+WARNING: one_logger package is required to enable e2e metrics tracking. please go to https://confluence.nvidia.com/display/MLWFO/Package+Repositories for details to install it
+WARNING:megatron.core.rerun_state_machine:RerunStateMachine initialized in mode RerunMode.VALIDATE_RESULTS
+> initializing torch distributed ...
+> initialized tensor model parallel with size 1
+> initialized pipeline model parallel with size 1
+> setting random seeds to 42 ...
+> compiling dataset index builder ...
+>>> done with dataset index builder. Compilation time: 0.080 seconds
+> compiling and loading fused kernels ...
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+>>> done with compiling and loading fused kernels. Compilation time: 0.952 seconds
+time to initialize megatron (seconds): 6.665
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[after in-process setup and before initialize_megatron] datetime: 2026-05-21 20:42:08.197131
+[after in-job setup and before initialize_megatron] datetime: 2026-05-21 20:42:08.231759
+INFO:megatron.core.timers:(min, max) time across ranks (ms):
+    startup-library-setup ..........................: (18860.50, 18860.50)
+    startup-program-setup ..........................: (50.25, 50.25)
+    startup-in-process-setup .......................: (0.00, 0.00)
+    startup-in-job-setup ...........................: (34.63, 34.63)
+    startup-initialize-megatron ....................: (3315.90, 3315.90)
+    startup-set-jit-fusion-options .................: (2958.10, 2958.10)
+    all-reduce-start-timestamps-tensor .............: (1.26, 1.26)
+    startup-megatron-init-local ....................: (6309.89, 6309.89)
+    startup-megatron-init-global ...................: (25220.64, 25220.64)
+[before library-setup] datetime: 2026-05-21 20:41:49.286385
+[after library-setup] datetime: 2026-05-21 20:42:08.146883
+[before megatron-init] datetime: 2026-05-21 20:42:08.197130
+[after megatron is initialized] datetime: 2026-05-21 20:42:14.512567
+building GPT model ...
+ > number of parameters on (tensor, pipeline) model parallel rank (0, 0): 3530492928
+INFO:megatron.core.distributed.distributed_data_parallel:Setting up DistributedDataParallel with config DistributedDataParallelConfig(grad_reduce_in_fp32=False, overlap_grad_reduce=True, overlap_param_gather=True, align_param_gather=False, use_distributed_optimizer=True, num_distributed_optimizer_instances=1, check_for_nan_in_grad=False, check_for_large_grads=False, bucket_size=40000000, pad_buckets_for_high_nccl_busbw=False, reduce_scatter_with_fp32_accumulation=False, average_in_collective=False, fp8_param_gather=False, reuse_grad_buf_for_mxfp8_param_ag=False, use_megatron_fsdp=False, use_custom_fsdp=False, data_parallel_sharding_strategy='no_shard', gradient_reduce_div_fusion=True, suggested_communication_unit_size=None, preserve_fp32_weights=True, keep_fp8_transpose_cache=False, nccl_ub=False, fsdp_double_buffer=False, outer_dp_sharding_strategy='no_shard', disable_symmetric_registration=False, fsdp_manual_registration=False, delay_wgrad_compute=False)
+INFO:megatron.core.distributed.param_and_grad_buffer:Number of buckets for gradient all-reduce / reduce-scatter: 65
+Params for bucket 1 (154533888 elements, 154533888 padded size):
+	module.output_layer.weight
+Params for bucket 2 (75500544 elements, 75500544 padded size):
+	module.decoder.final_layernorm.weight
+	module.decoder.layers.31.mlp.linear_fc1.weight
+	module.decoder.layers.31.mlp.linear_fc2.weight
+Params for bucket 3 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.31.self_attention.linear_proj.weight
+	module.decoder.layers.30.mlp.linear_fc2.weight
+	module.decoder.layers.31.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.31.self_attention.linear_qkv.weight
+	module.decoder.layers.31.mlp.linear_fc1.layer_norm_weight
+Params for bucket 4 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.30.mlp.linear_fc1.weight
+Params for bucket 5 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.29.mlp.linear_fc2.weight
+	module.decoder.layers.30.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.30.self_attention.linear_qkv.weight
+	module.decoder.layers.30.self_attention.linear_proj.weight
+	module.decoder.layers.30.mlp.linear_fc1.layer_norm_weight
+Params for bucket 6 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.29.mlp.linear_fc1.weight
+Params for bucket 7 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.29.self_attention.linear_proj.weight
+	module.decoder.layers.28.mlp.linear_fc2.weight
+	module.decoder.layers.29.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.29.self_attention.linear_qkv.weight
+	module.decoder.layers.29.mlp.linear_fc1.layer_norm_weight
+Params for bucket 8 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.28.mlp.linear_fc1.weight
+Params for bucket 9 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.28.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.28.self_attention.linear_qkv.weight
+	module.decoder.layers.28.self_attention.linear_proj.weight
+	module.decoder.layers.27.mlp.linear_fc2.weight
+	module.decoder.layers.28.mlp.linear_fc1.layer_norm_weight
+Params for bucket 10 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.27.mlp.linear_fc1.weight
+Params for bucket 11 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.27.self_attention.linear_qkv.weight
+	module.decoder.layers.27.self_attention.linear_proj.weight
+	module.decoder.layers.26.mlp.linear_fc2.weight
+	module.decoder.layers.27.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.27.mlp.linear_fc1.layer_norm_weight
+Params for bucket 12 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.26.mlp.linear_fc1.weight
+Params for bucket 13 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.26.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.26.self_attention.linear_proj.weight
+	module.decoder.layers.26.self_attention.linear_qkv.weight
+	module.decoder.layers.26.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.25.mlp.linear_fc2.weight
+Params for bucket 14 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.25.mlp.linear_fc1.weight
+Params for bucket 15 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.25.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.25.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.24.mlp.linear_fc2.weight
+	module.decoder.layers.25.self_attention.linear_qkv.weight
+	module.decoder.layers.25.self_attention.linear_proj.weight
+Params for bucket 16 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.24.mlp.linear_fc1.weight
+Params for bucket 17 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.24.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.24.self_attention.linear_qkv.weight
+	module.decoder.layers.24.self_attention.linear_proj.weight
+	module.decoder.layers.23.mlp.linear_fc2.weight
+	module.decoder.layers.24.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 18 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.23.mlp.linear_fc1.weight
+Params for bucket 19 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.23.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.22.mlp.linear_fc2.weight
+	module.decoder.layers.23.self_attention.linear_proj.weight
+	module.decoder.layers.23.self_attention.linear_qkv.weight
+	module.decoder.layers.23.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 20 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.22.mlp.linear_fc1.weight
+Params for bucket 21 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.22.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.21.mlp.linear_fc2.weight
+	module.decoder.layers.22.self_attention.linear_qkv.weight
+	module.decoder.layers.22.self_attention.linear_proj.weight
+	module.decoder.layers.22.mlp.linear_fc1.layer_norm_weight
+Params for bucket 22 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.21.mlp.linear_fc1.weight
+Params for bucket 23 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.21.self_attention.linear_qkv.weight
+	module.decoder.layers.21.self_attention.linear_proj.weight
+	module.decoder.layers.20.mlp.linear_fc2.weight
+	module.decoder.layers.21.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.21.mlp.linear_fc1.layer_norm_weight
+Params for bucket 24 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.20.mlp.linear_fc1.weight
+Params for bucket 25 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.20.self_attention.linear_proj.weight
+	module.decoder.layers.20.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.20.self_attention.linear_qkv.weight
+	module.decoder.layers.19.mlp.linear_fc2.weight
+	module.decoder.layers.20.mlp.linear_fc1.layer_norm_weight
+Params for bucket 26 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.19.mlp.linear_fc1.weight
+Params for bucket 27 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.19.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.19.self_attention.linear_qkv.weight
+	module.decoder.layers.19.self_attention.linear_proj.weight
+	module.decoder.layers.18.mlp.linear_fc2.weight
+	module.decoder.layers.19.mlp.linear_fc1.layer_norm_weight
+Params for bucket 28 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.18.mlp.linear_fc1.weight
+Params for bucket 29 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.18.self_attention.linear_qkv.weight
+	module.decoder.layers.18.self_attention.linear_proj.weight
+	module.decoder.layers.17.mlp.linear_fc2.weight
+	module.decoder.layers.18.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.18.mlp.linear_fc1.layer_norm_weight
+Params for bucket 30 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.17.mlp.linear_fc1.weight
+Params for bucket 31 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.16.mlp.linear_fc2.weight
+	module.decoder.layers.17.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.17.self_attention.linear_proj.weight
+	module.decoder.layers.17.self_attention.linear_qkv.weight
+	module.decoder.layers.17.mlp.linear_fc1.layer_norm_weight
+Params for bucket 32 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.16.mlp.linear_fc1.weight
+Params for bucket 33 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.15.mlp.linear_fc2.weight
+	module.decoder.layers.16.self_attention.linear_qkv.weight
+	module.decoder.layers.16.self_attention.linear_proj.weight
+	module.decoder.layers.16.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.16.mlp.linear_fc1.layer_norm_weight
+Params for bucket 34 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.15.mlp.linear_fc1.weight
+Params for bucket 35 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.15.self_attention.linear_proj.weight
+	module.decoder.layers.15.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.14.mlp.linear_fc2.weight
+	module.decoder.layers.15.self_attention.linear_qkv.weight
+	module.decoder.layers.15.mlp.linear_fc1.layer_norm_weight
+Params for bucket 36 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.14.mlp.linear_fc1.weight
+Params for bucket 37 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.14.self_attention.linear_qkv.weight
+	module.decoder.layers.14.self_attention.linear_proj.weight
+	module.decoder.layers.13.mlp.linear_fc2.weight
+	module.decoder.layers.14.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.14.mlp.linear_fc1.layer_norm_weight
+Params for bucket 38 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.13.mlp.linear_fc1.weight
+Params for bucket 39 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.13.self_attention.linear_qkv.weight
+	module.decoder.layers.13.self_attention.linear_proj.weight
+	module.decoder.layers.13.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.13.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.12.mlp.linear_fc2.weight
+Params for bucket 40 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.12.mlp.linear_fc1.weight
+Params for bucket 41 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.12.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.12.self_attention.linear_proj.weight
+	module.decoder.layers.11.mlp.linear_fc2.weight
+	module.decoder.layers.12.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.12.self_attention.linear_qkv.weight
+Params for bucket 42 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.11.mlp.linear_fc1.weight
+Params for bucket 43 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.11.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.11.self_attention.linear_proj.weight
+	module.decoder.layers.11.self_attention.linear_qkv.weight
+	module.decoder.layers.11.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.10.mlp.linear_fc2.weight
+Params for bucket 44 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.10.mlp.linear_fc1.weight
+Params for bucket 45 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.10.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.10.self_attention.linear_qkv.weight
+	module.decoder.layers.10.self_attention.linear_proj.weight
+	module.decoder.layers.9.mlp.linear_fc2.weight
+	module.decoder.layers.10.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 46 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.9.mlp.linear_fc1.weight
+Params for bucket 47 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.9.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.9.self_attention.linear_proj.weight
+	module.decoder.layers.9.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.8.mlp.linear_fc2.weight
+	module.decoder.layers.9.self_attention.linear_qkv.weight
+Params for bucket 48 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.8.mlp.linear_fc1.weight
+Params for bucket 49 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.8.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.8.self_attention.linear_qkv.weight
+	module.decoder.layers.8.self_attention.linear_proj.weight
+	module.decoder.layers.7.mlp.linear_fc2.weight
+	module.decoder.layers.8.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 50 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.7.mlp.linear_fc1.weight
+Params for bucket 51 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.7.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.6.mlp.linear_fc2.weight
+	module.decoder.layers.7.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.7.self_attention.linear_proj.weight
+	module.decoder.layers.7.self_attention.linear_qkv.weight
+Params for bucket 52 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.6.mlp.linear_fc1.weight
+Params for bucket 53 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.5.mlp.linear_fc2.weight
+	module.decoder.layers.6.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.6.self_attention.linear_proj.weight
+	module.decoder.layers.6.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.6.self_attention.linear_qkv.weight
+Params for bucket 54 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.5.mlp.linear_fc1.weight
+Params for bucket 55 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.5.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.5.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.4.mlp.linear_fc2.weight
+	module.decoder.layers.5.self_attention.linear_qkv.weight
+	module.decoder.layers.5.self_attention.linear_proj.weight
+Params for bucket 56 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.4.mlp.linear_fc1.weight
+Params for bucket 57 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.4.self_attention.linear_qkv.weight
+	module.decoder.layers.4.self_attention.linear_proj.weight
+	module.decoder.layers.4.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.3.mlp.linear_fc2.weight
+	module.decoder.layers.4.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 58 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.3.mlp.linear_fc1.weight
+Params for bucket 59 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.3.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.3.self_attention.linear_proj.weight
+	module.decoder.layers.3.self_attention.linear_qkv.weight
+	module.decoder.layers.2.mlp.linear_fc2.weight
+	module.decoder.layers.3.self_attention.linear_qkv.layer_norm_weight
+Params for bucket 60 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.2.mlp.linear_fc1.weight
+Params for bucket 61 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.1.mlp.linear_fc2.weight
+	module.decoder.layers.2.self_attention.linear_qkv.weight
+	module.decoder.layers.2.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.2.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.2.self_attention.linear_proj.weight
+Params for bucket 62 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.1.mlp.linear_fc1.weight
+Params for bucket 63 (50337792 elements, 50337792 padded size):
+	module.decoder.layers.1.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.1.self_attention.linear_qkv.weight
+	module.decoder.layers.0.mlp.linear_fc2.weight
+	module.decoder.layers.1.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.1.self_attention.linear_proj.weight
+Params for bucket 64 (50331648 elements, 50331648 padded size):
+	module.decoder.layers.0.mlp.linear_fc1.weight
+Params for bucket 65 (179705856 elements, 179705856 padded size):
+	module.decoder.layers.0.self_attention.linear_proj.weight
+	module.embedding.word_embeddings.weight
+	module.decoder.layers.0.mlp.linear_fc1.layer_norm_weight
+	module.decoder.layers.0.self_attention.linear_qkv.layer_norm_weight
+	module.decoder.layers.0.self_attention.linear_qkv.weight
+INFO:megatron.core.optimizer:Setting up optimizer with config AdamOptimizerConfig(lr=0.0003, min_lr=0.0, decoupled_lr=None, decoupled_min_lr=None, weight_decay=0.1, apply_wd_to_qk_layernorm=False, fp8_recipe='delayed', fp16=False, bf16=True, reuse_grad_buf_for_mxfp8_param_ag=False, params_dtype=torch.bfloat16, use_precision_aware_optimizer=True, store_param_remainders=True, main_grads_dtype=torch.bfloat16, main_params_dtype=torch.float32, exp_avg_dtype=torch.float32, exp_avg_sq_dtype=torch.float32, optimizer='adam', loss_scale=None, initial_loss_scale=4294967296, min_loss_scale=1.0, loss_scale_window=1000, hysteresis=2, adam_beta1=0.9, adam_beta2=0.95, adam_eps=1e-08, decoupled_weight_decay=True, sgd_momentum=0.9, muon_momentum=0.9, muon_split_qkv=True, muon_use_nesterov=False, muon_scale_mode='spectral', muon_fp32_matmul_prec='medium', muon_num_ns_steps=5, muon_tp_mode='blockwise', muon_extra_scale_factor=1.0, use_distributed_optimizer=True, overlap_param_gather=True, overlap_param_gather_with_optimizer_step=False, optimizer_cpu_offload=False, optimizer_offload_fraction=1.0, use_torch_optimizer_for_cpu_offload=False, overlap_cpu_optimizer_d2h_h2d=False, pin_cpu_grads=True, pin_cpu_params=True, clip_grad=1.0, log_num_zeros_in_grad=False, barrier_with_L1_time=True, timers=<megatron.core.timers.Timers object at 0x4005ce3582c0>, config_logger_dir='')
+INFO:megatron.core.optimizer_param_scheduler:> learning rate decay style: constant
+[after model, optimizer, and learning rate scheduler are built] datetime: 2026-05-21 20:42:14.738850
+> building train, validation, and test datasets ...
+ > datasets target sizes (minimum size):
+    train:      12800
+    validation: 0
+    test:       0
+INFO:megatron.core.datasets.blended_megatron_dataset_config:Let split_matrix = [(0, 0.99), (0.99, 1.0), None]
+> building train, validation, and test datasets for GPT ...
+INFO:megatron.core.datasets.blended_megatron_dataset_builder:Building GPTDataset splits with sizes=(12800, 0, 0) and config=GPTDatasetConfig(random_seed=42, sequence_length=4096, blend=(['/capstor/store/cscs/swissai/infra01/datasets/nvidia/Nemotron-ClimbMix/climbmix_small_megatron/climbmix_small'], None), blend_per_split=None, multiple_validation_sets=False, full_validation=False, split='99,1,0', split_matrix=[(0, 0.99), (0.99, 1.0), None], num_dataset_builder_threads=1, path_to_cache='/iopsstor/scratch/cscs/course_00320/gipfelsturm/.cache/dataset', mmap_bin_files=True, mock=False, tokenizer=<megatron.core.tokenizers.text.models.default_tokenizer.DefaultTokenizerText object at 0x40067f7889e0>, mid_level_dataset_surplus=0.005, allow_ambiguous_pad_tokens=False, fast_cache_load=False, defer_npy_index_mmap=False, reset_position_ids=False, reset_attention_mask=False, eod_mask_loss=False, create_attention_mask=True, drop_last_partial_validation_sequence=True, add_extra_token_to_sequence=True, object_storage_cache_path=None, data_parallel_size=1, sequence_parallel_size=0, hybrid_context_parallel=False, sequences_per_dataset=None, token_dtype_code=8, context_parallel_size=1)
+INFO:megatron.core.datasets.indexed_dataset:Load the _IndexReader from /capstor/store/cscs/swissai/infra01/datasets/nvidia/Nemotron-ClimbMix/climbmix_small_megatron/climbmix_small.idx
+INFO:megatron.core.datasets.indexed_dataset:	Extract the sequence lengths
+INFO:megatron.core.datasets.indexed_dataset:	Extract the sequence pointers
+INFO:megatron.core.datasets.indexed_dataset:	Extract the document indices
+INFO:megatron.core.datasets.indexed_dataset:> total number of sequences: 48965906
+INFO:megatron.core.datasets.indexed_dataset:> total number of documents: 48965906
+INFO:megatron.core.datasets.gpt_dataset:Load the GPTDataset train indices
+INFO:megatron.core.datasets.gpt_dataset:	Load the document index from aeb6009909b6e5cd802d6c358d848136-GPTDataset-train-document_index.npy
+INFO:megatron.core.datasets.gpt_dataset:	Load the sample index from aeb6009909b6e5cd802d6c358d848136-GPTDataset-train-sample_index.npy
+INFO:megatron.core.datasets.gpt_dataset:	Load the shuffle index from aeb6009909b6e5cd802d6c358d848136-GPTDataset-train-shuffle_index.npy
+INFO:megatron.core.datasets.gpt_dataset:> total number of samples: 8612827
+INFO:megatron.core.datasets.gpt_dataset:Load the GPTDataset valid indices
+INFO:megatron.core.datasets.gpt_dataset:	Load the document index from 0c07634c260badf9b33dc917595e0bf6-GPTDataset-valid-document_index.npy
+INFO:megatron.core.datasets.gpt_dataset:	Load the sample index from 0c07634c260badf9b33dc917595e0bf6-GPTDataset-valid-sample_index.npy
+INFO:megatron.core.datasets.gpt_dataset:	Load the shuffle index from 0c07634c260badf9b33dc917595e0bf6-GPTDataset-valid-shuffle_index.npy
+INFO:megatron.core.datasets.gpt_dataset:> total number of samples: 61644
+> finished creating GPT datasets ...
+[after dataloaders are built] datetime: 2026-05-21 20:42:15.719802
+done with setup ...
+INFO:megatron.core.timers:(min, max) time across ranks (ms):
+    model-and-optimizer-setup ......................: (225.32, 225.32)
+    train/valid/test-data-iterators-setup ..........: (979.21, 979.21)
+training ...
+Overwriting rerun_state_machine.current_iteration from -1 to 0...
+[before the start of training step] datetime: 2026-05-21 20:42:15.731231
+/iopsstor/scratch/cscs/course_00320/gipfelsturm/Megatron-LM/megatron/core/pipeline_parallel/schedules.py:189: UserWarning: The AccumulateGrad node's stream does not match the stream of the node that produced the incoming gradient. This may incur unnecessary synchronization and break CUDA graph capture if the AccumulateGrad node's stream is the default stream. This mismatch is caused by an AccumulateGrad node created prior to the current iteration being kept alive. This can happen if the autograd graph is still being kept alive by tensors such as the loss, or if you are using DDP, which will stash a reference to the node. To resolve the mismatch, delete all references to the autograd graph or ensure that DDP initialization is performed under the same stream as subsequent forwards. If the mismatch is intentional, you can use torch.autograd.graph.set_warn_on_accumulate_grad_stream_mismatch(False) to suppress this warning. (Triggered internally at /opt/pytorch/pytorch/torch/csrc/autograd/input_buffer.cpp:240.)
+  Variable._execution_engine.run_backward(
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+ [2026-05-21 20:43:34.578344] iteration        1/      50 | consumed samples:          256 | elapsed time per iteration (ms): 78847.2 | throughput per GPU (TFLOP/s/GPU): 301.5 | tokens/sec/GPU: 13299 | learning rate: 3.000000E-05 | global batch size:   256 | lm loss: 1.143125E+01 | loss scale: 1.0 | grad norm: 18.500 | number of skipped iterations:   0 | number of nan iterations:   0 |
+Number of parameters in transformer block in billions:  3.22
+Number of parameters in embedding layers in billions: 0.31
+Total number of parameters in billions: 3.53
+Number of parameters in most loaded shard in billions: 3.5305
+compute_activation_memory_without_sp
+Activation memory footprint per transformer layer (precise, without SP): 816.0 MB
+Theoretical memory footprints: weight and optimizer=60604.93 MB, activation=28318.57 MB, total=88923.49 MB
+
+[Rank 0] (after 1 iterations) memory (MB) | allocated: 47723.16 | max allocated: 47723.22 | reserved: 50974.00 | max reserved: 50974.00
+ [2026-05-21 20:44:34.824170] iteration        2/      50 | consumed samples:          512 | elapsed time per iteration (ms): 69545.9 | throughput per GPU (TFLOP/s/GPU): 341.8 | tokens/sec/GPU: 15077 | learning rate: 6.000000E-05 | global batch size:   256 | lm loss: 1.142835E+01 | loss scale: 1.0 | grad norm: 16.209 | number of skipped iterations:   0 | number of nan iterations:   0 |
+Number of parameters in transformer block in billions:  3.22
+Number of parameters in embedding layers in billions: 0.31
+Total number of parameters in billions: 3.53
+Number of parameters in most loaded shard in billions: 3.5305
+compute_activation_memory_without_sp
+Activation memory footprint per transformer layer (precise, without SP): 816.0 MB
+Theoretical memory footprints: weight and optimizer=60604.93 MB, activation=28318.57 MB, total=88923.49 MB
+
+[Rank 0] (after 2 iterations) memory (MB) | allocated: 47723.16 | max allocated: 74335.78 | reserved: 76380.00 | max reserved: 76380.00
+ [2026-05-21 20:45:31.188113] iteration        3/      50 | consumed samples:          768 | elapsed time per iteration (ms): 56363.8 | throughput per GPU (TFLOP/s/GPU): 421.8 | tokens/sec/GPU: 18604 | learning rate: 9.000000E-05 | global batch size:   256 | lm loss: 1.342112E+01 | loss scale: 1.0 | grad norm: 308.970 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:46:24.274327] iteration        4/      50 | consumed samples:         1024 | elapsed time per iteration (ms): 53086.1 | throughput per GPU (TFLOP/s/GPU): 447.8 | tokens/sec/GPU: 19752 | learning rate: 1.200000E-04 | global batch size:   256 | lm loss: 1.415265E+01 | loss scale: 1.0 | grad norm: 55.219 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:47:15.287179] iteration        5/      50 | consumed samples:         1280 | elapsed time per iteration (ms): 51012.7 | throughput per GPU (TFLOP/s/GPU): 466.0 | tokens/sec/GPU: 20555 | learning rate: 1.500000E-04 | global batch size:   256 | lm loss: 1.203846E+01 | loss scale: 1.0 | grad norm: 119.185 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:48:06.776197] iteration        6/      50 | consumed samples:         1536 | elapsed time per iteration (ms): 51488.9 | throughput per GPU (TFLOP/s/GPU): 461.7 | tokens/sec/GPU: 20365 | learning rate: 1.800000E-04 | global batch size:   256 | lm loss: 2.416319E+01 | loss scale: 1.0 | grad norm: 152.132 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:48:57.428054] iteration        7/      50 | consumed samples:         1792 | elapsed time per iteration (ms): 50651.8 | throughput per GPU (TFLOP/s/GPU): 469.3 | tokens/sec/GPU: 20702 | learning rate: 2.100000E-04 | global batch size:   256 | lm loss: 1.469349E+01 | loss scale: 1.0 | grad norm: 78.680 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:49:47.878904] iteration        8/      50 | consumed samples:         2048 | elapsed time per iteration (ms): 50450.7 | throughput per GPU (TFLOP/s/GPU): 471.2 | tokens/sec/GPU: 20784 | learning rate: 2.400000E-04 | global batch size:   256 | lm loss: 1.192147E+01 | loss scale: 1.0 | grad norm: 5.333 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:50:38.232973] iteration        9/      50 | consumed samples:         2304 | elapsed time per iteration (ms): 50354.0 | throughput per GPU (TFLOP/s/GPU): 472.1 | tokens/sec/GPU: 20824 | learning rate: 2.700000E-04 | global batch size:   256 | lm loss: 1.210080E+01 | loss scale: 1.0 | grad norm: 43.648 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:51:28.567964] iteration       10/      50 | consumed samples:         2560 | elapsed time per iteration (ms): 50334.8 | throughput per GPU (TFLOP/s/GPU): 472.3 | tokens/sec/GPU: 20832 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 1.054638E+01 | loss scale: 1.0 | grad norm: 12.603 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:52:19.144018] iteration       11/      50 | consumed samples:         2816 | elapsed time per iteration (ms): 50575.9 | throughput per GPU (TFLOP/s/GPU): 470.0 | tokens/sec/GPU: 20733 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 9.791208E+00 | loss scale: 1.0 | grad norm: 4.808 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:53:09.388264] iteration       12/      50 | consumed samples:         3072 | elapsed time per iteration (ms): 50244.1 | throughput per GPU (TFLOP/s/GPU): 473.1 | tokens/sec/GPU: 20870 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 9.246173E+00 | loss scale: 1.0 | grad norm: 4.314 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:53:59.545403] iteration       13/      50 | consumed samples:         3328 | elapsed time per iteration (ms): 50157.1 | throughput per GPU (TFLOP/s/GPU): 473.9 | tokens/sec/GPU: 20906 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 9.237936E+00 | loss scale: 1.0 | grad norm: 27.050 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:54:49.772126] iteration       14/      50 | consumed samples:         3584 | elapsed time per iteration (ms): 50226.5 | throughput per GPU (TFLOP/s/GPU): 473.3 | tokens/sec/GPU: 20877 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 8.348980E+00 | loss scale: 1.0 | grad norm: 5.444 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:55:40.187679] iteration       15/      50 | consumed samples:         3840 | elapsed time per iteration (ms): 50415.5 | throughput per GPU (TFLOP/s/GPU): 471.5 | tokens/sec/GPU: 20799 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 8.284552E+00 | loss scale: 1.0 | grad norm: 5.853 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:56:30.431168] iteration       16/      50 | consumed samples:         4096 | elapsed time per iteration (ms): 50243.5 | throughput per GPU (TFLOP/s/GPU): 473.1 | tokens/sec/GPU: 20870 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 8.053256E+00 | loss scale: 1.0 | grad norm: 3.818 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:57:20.703882] iteration       17/      50 | consumed samples:         4352 | elapsed time per iteration (ms): 50272.6 | throughput per GPU (TFLOP/s/GPU): 472.9 | tokens/sec/GPU: 20858 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.842280E+00 | loss scale: 1.0 | grad norm: 4.242 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:58:10.923227] iteration       18/      50 | consumed samples:         4608 | elapsed time per iteration (ms): 50219.2 | throughput per GPU (TFLOP/s/GPU): 473.4 | tokens/sec/GPU: 20880 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.984691E+00 | loss scale: 1.0 | grad norm: 11.162 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:59:01.262547] iteration       19/      50 | consumed samples:         4864 | elapsed time per iteration (ms): 50339.2 | throughput per GPU (TFLOP/s/GPU): 472.2 | tokens/sec/GPU: 20830 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.713969E+00 | loss scale: 1.0 | grad norm: 3.878 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 20:59:51.544014] iteration       20/      50 | consumed samples:         5120 | elapsed time per iteration (ms): 50281.3 | throughput per GPU (TFLOP/s/GPU): 472.8 | tokens/sec/GPU: 20854 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.844327E+00 | loss scale: 1.0 | grad norm: 10.760 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:00:41.803110] iteration       21/      50 | consumed samples:         5376 | elapsed time per iteration (ms): 50259.0 | throughput per GPU (TFLOP/s/GPU): 473.0 | tokens/sec/GPU: 20863 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.886558E+00 | loss scale: 1.0 | grad norm: 10.182 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:01:32.136769] iteration       22/      50 | consumed samples:         5632 | elapsed time per iteration (ms): 50333.5 | throughput per GPU (TFLOP/s/GPU): 472.3 | tokens/sec/GPU: 20833 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.839660E+00 | loss scale: 1.0 | grad norm: 2.848 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:02:22.512042] iteration       23/      50 | consumed samples:         5888 | elapsed time per iteration (ms): 50375.1 | throughput per GPU (TFLOP/s/GPU): 471.9 | tokens/sec/GPU: 20815 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.727044E+00 | loss scale: 1.0 | grad norm: 3.491 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:03:12.875234] iteration       24/      50 | consumed samples:         6144 | elapsed time per iteration (ms): 50363.1 | throughput per GPU (TFLOP/s/GPU): 472.0 | tokens/sec/GPU: 20820 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.627596E+00 | loss scale: 1.0 | grad norm: 2.886 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:04:03.267021] iteration       25/      50 | consumed samples:         6400 | elapsed time per iteration (ms): 50391.7 | throughput per GPU (TFLOP/s/GPU): 471.7 | tokens/sec/GPU: 20808 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.664577E+00 | loss scale: 1.0 | grad norm: 2.440 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:04:54.542928] iteration       26/      50 | consumed samples:         6656 | elapsed time per iteration (ms): 51275.7 | throughput per GPU (TFLOP/s/GPU): 463.6 | tokens/sec/GPU: 20450 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.637293E+00 | loss scale: 1.0 | grad norm: 4.181 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:05:44.855903] iteration       27/      50 | consumed samples:         6912 | elapsed time per iteration (ms): 50312.9 | throughput per GPU (TFLOP/s/GPU): 472.5 | tokens/sec/GPU: 20841 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.615168E+00 | loss scale: 1.0 | grad norm: 6.597 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:06:35.489603] iteration       28/      50 | consumed samples:         7168 | elapsed time per iteration (ms): 50633.6 | throughput per GPU (TFLOP/s/GPU): 469.5 | tokens/sec/GPU: 20709 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.639645E+00 | loss scale: 1.0 | grad norm: 4.906 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:07:25.939484] iteration       29/      50 | consumed samples:         7424 | elapsed time per iteration (ms): 50449.8 | throughput per GPU (TFLOP/s/GPU): 471.2 | tokens/sec/GPU: 20785 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.651614E+00 | loss scale: 1.0 | grad norm: 1.870 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:08:16.398221] iteration       30/      50 | consumed samples:         7680 | elapsed time per iteration (ms): 50458.6 | throughput per GPU (TFLOP/s/GPU): 471.1 | tokens/sec/GPU: 20781 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.607980E+00 | loss scale: 1.0 | grad norm: 1.880 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:09:06.878695] iteration       31/      50 | consumed samples:         7936 | elapsed time per iteration (ms): 50480.4 | throughput per GPU (TFLOP/s/GPU): 470.9 | tokens/sec/GPU: 20772 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.505964E+00 | loss scale: 1.0 | grad norm: 2.439 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:09:58.025733] iteration       32/      50 | consumed samples:         8192 | elapsed time per iteration (ms): 51146.9 | throughput per GPU (TFLOP/s/GPU): 464.8 | tokens/sec/GPU: 20501 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.444019E+00 | loss scale: 1.0 | grad norm: 2.293 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:10:48.572754] iteration       33/      50 | consumed samples:         8448 | elapsed time per iteration (ms): 50546.9 | throughput per GPU (TFLOP/s/GPU): 470.3 | tokens/sec/GPU: 20745 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.491513E+00 | loss scale: 1.0 | grad norm: 1.829 | number of skipped iterations:   0 | number of nan iterations:   0 |
+ [2026-05-21 21:11:39.109038] iteration       34/      50 | consumed samples:         8704 | elapsed time per iteration (ms): 50536.1 | throughput per GPU (TFLOP/s/GPU): 470.4 | tokens/sec/GPU: 20749 | learning rate: 3.000000E-04 | global batch size:   256 | lm loss: 7.480964E+00 | loss scale: 1.0 | grad norm: 1.342 | number of skipped iterations:   0 | number of nan iterations:   0 |

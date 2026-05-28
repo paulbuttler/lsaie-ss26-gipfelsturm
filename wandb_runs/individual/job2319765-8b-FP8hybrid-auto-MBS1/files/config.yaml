@@ -1,0 +1,1618 @@
+_wandb:
+    value:
+        cli_version: 0.25.0
+        e:
+            86dppony2mjyoho4gzl5au927l3b0mpk:
+                args:
+                    - --transformer-impl
+                    - transformer_engine
+                    - --use-precision-aware-optimizer
+                    - --main-grads-dtype
+                    - bf16
+                    - --attention-backend
+                    - auto
+                    - --fp8-format
+                    - hybrid
+                    - --num-layers
+                    - "32"
+                    - --hidden-size
+                    - "4096"
+                    - --ffn-hidden-size
+                    - "14336"
+                    - --num-attention-heads
+                    - "32"
+                    - --group-query-attention
+                    - --num-query-groups
+                    - "8"
+                    - --max-position-embeddings
+                    - "4096"
+                    - --position-embedding-type
+                    - rope
+                    - --normalization
+                    - RMSNorm
+                    - --swiglu
+                    - --untie-embeddings-and-output-weights
+                    - --seq-length
+                    - "4096"
+                    - --micro-batch-size
+                    - "1"
+                    - --global-batch-size
+                    - "256"
+                    - --train-iters
+                    - "50"
+                    - --log-interval
+                    - "1"
+                    - --eval-interval
+                    - "50"
+                    - --eval-iters
+                    - "0"
+                    - --cross-entropy-loss-fusion
+                    - --disable-bias-linear
+                    - --optimizer
+                    - adam
+                    - --dataloader-type
+                    - single
+                    - --no-check-for-nan-in-loss-and-grad
+                    - --manual-gc
+                    - --manual-gc-interval
+                    - "50"
+                    - --attention-dropout
+                    - "0.0"
+                    - --hidden-dropout
+                    - "0.0"
+                    - --weight-decay
+                    - "0.1"
+                    - --clip-grad
+                    - "1.0"
+                    - --adam-beta1
+                    - "0.9"
+                    - --adam-beta2
+                    - "0.95"
+                    - --lr
+                    - "3e-4"
+                    - --lr-decay-style
+                    - constant
+                    - --lr-warmup-iters
+                    - "10"
+                    - --seed
+                    - "42"
+                    - --init-method-std
+                    - "0.02"
+                    - --bf16
+                    - --tensor-model-parallel-size
+                    - "1"
+                    - --pipeline-model-parallel-size
+                    - "1"
+                    - --use-distributed-optimizer
+                    - --overlap-grad-reduce
+                    - --overlap-param-gather
+                    - --log-throughput
+                    - --log-progress
+                    - --log-timers-to-tensorboard
+                    - --tokenizer-type
+                    - GPT2BPETokenizer
+                    - --vocab-file
+                    - /iopsstor/scratch/cscs/course_00320/gipfelsturm/data/gpt2-vocab.json
+                    - --merge-file
+                    - /iopsstor/scratch/cscs/course_00320/gipfelsturm/data/gpt2-merges.txt
+                    - --data-path
+                    - /capstor/store/cscs/swissai/infra01/datasets/nvidia/Nemotron-ClimbMix/climbmix_small_megatron/climbmix_small
+                    - --data-cache-path
+                    - /iopsstor/scratch/cscs/course_00320/gipfelsturm/.cache/dataset
+                    - --split
+                    - 99,1,0
+                    - --num-workers
+                    - "1"
+                    - --wandb-save-dir
+                    - /iopsstor/scratch/cscs/course_00320/gipfelsturm/runs/gipfelsturm/throughput-8b-1n
+                    - --wandb-project
+                    - gipfelsturm
+                    - --wandb-exp-name
+                    - throughput-8b-1n-2319765
+                cpu_count: 288
+                cpu_count_logical: 288
+                cudaVersion: "13.1"
+                disk:
+                    /:
+                        total: "459806408704"
+                        used: "851968"
+                email: samuel.karsko@gmail.com
+                executable: /usr/bin/python
+                gpu: NVIDIA GH200 120GB
+                gpu_count: 4
+                gpu_nvidia:
+                    - architecture: Hopper
+                      cudaCores: 16896
+                      memoryTotal: "102625181696"
+                      name: NVIDIA GH200 120GB
+                      uuid: GPU-fd321822-249b-bb62-4809-f966c2e5db8a
+                    - architecture: Hopper
+                      cudaCores: 16896
+                      memoryTotal: "102625181696"
+                      name: NVIDIA GH200 120GB
+                      uuid: GPU-e6bd8766-53ad-b9c2-469b-bc3bdf6dcbc6
+                    - architecture: Hopper
+                      cudaCores: 16896
+                      memoryTotal: "102625181696"
+                      name: NVIDIA GH200 120GB
+                      uuid: GPU-d6e84c3c-52ea-1835-578e-8f0839a65667
+                    - architecture: Hopper
+                      cudaCores: 16896
+                      memoryTotal: "102625181696"
+                      name: NVIDIA GH200 120GB
+                      uuid: GPU-e4947a10-936f-a9e3-fbe1-d680e0f16109
+                host: nid007070
+                memory:
+                    total: "919612817408"
+                os: Linux-6.4.0-150600.23.47_15.0.10-cray_shasta_c_64k-aarch64-with-glibc2.39
+                program: /iopsstor/scratch/cscs/course_00320/gipfelsturm/Megatron-LM/pretrain_gpt.py
+                python: CPython 3.12.3
+                root: /iopsstor/scratch/cscs/course_00320/gipfelsturm/runs/gipfelsturm/throughput-8b-1n
+                slurm:
+                    cluster_name: clariden
+                    conf: /var/spool/slurmd/conf-cache/slurm.conf
+                    cpu_bind: quiet,mask_cpu:0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                    cpu_bind_list: 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                    cpu_bind_type: 'mask_cpu:'
+                    cpu_bind_verbose: quiet
+                    cpus_on_node: "288"
+                    cpus_per_task: "288"
+                    distribution: cyclic
+                    edf_expanded: |
+                        image = "jfrog.svc.cscs.ch/docker-group-csstaff/alps-images/ngc-pytorch:26.01-py3-alps3"
+                        workdir = "/users/course_00320"
+                        writable = true
+                        mounts = [
+                            "/capstor:/capstor:",
+                            "/users:/users:",
+                            "/iopsstor:/iopsstor:"
+                          ]
+                        [env]
+                        PMIX_MCA_psec = "native"
+                        OCI_ANNOTATION_com__hooks__cxi__enabled = "false"
+                        [annotations]
+                        com.hooks.cxi.enabled = "false"
+                    edf_imagestore: /iopsstor/scratch/cscs/course_00320/.edf_imagestore
+                    gpus_on_node: "4"
+                    gpus_per_node: "4"
+                    gtids: "0"
+                    job_account: lsaie-ss26
+                    job_cpus_per_node: "288"
+                    job_end_time: "1779239893"
+                    job_gid: "1049"
+                    job_gpus: 0,1,2,3
+                    job_id: "2319765"
+                    job_name: gipfel-throughput-8b-50s-1n-auto-fp8hybrid
+                    job_nodelist: nid007070
+                    job_num_nodes: "1"
+                    job_partition: normal
+                    job_qos: normal
+                    job_start_time: "1779238093"
+                    job_uid: "1796"
+                    job_user: course_00320
+                    jobid: "2319765"
+                    labelio: "1"
+                    launch_node_ipaddr: 172.28.51.161
+                    localid: "0"
+                    mem_per_node: "460000"
+                    mpi_type: pmix
+                    network: disable_rdzv_get
+                    nnodes: "1"
+                    nodeid: "0"
+                    nodelist: nid007070
+                    nprocs: "1"
+                    ntasks: "1"
+                    ntasks_per_node: "1"
+                    pmix_mapping_serv: (vector,(0,1,1))
+                    pmixp_abort_agent_port: "45315"
+                    prio_process: "0"
+                    procid: "0"
+                    script_context: prolog_task
+                    srun_comm_host: 172.28.51.161
+                    srun_comm_port: "45191"
+                    step_gpus: 0,1,2,3
+                    step_id: "0"
+                    step_launcher_port: "45191"
+                    step_nodelist: nid007070
+                    step_num_nodes: "1"
+                    step_num_tasks: "1"
+                    step_resv_ports: 32518-32519
+                    step_tasks_per_node: "1"
+                    stepid: "0"
+                    submit_dir: /iopsstor/scratch/cscs/course_00320/gipfelsturm
+                    submit_host: clariden-ln004
+                    task_pid: "161870"
+                    tasks_per_node: "1"
+                    time_format: relative
+                    topology_addr: global.group32.nid007070
+                    topology_addr_pattern: switch.switch.node
+                    tres_per_task: cpu=288
+                    umask: "0022"
+                startedAt: "2026-05-20T00:49:00.049538Z"
+                writerId: 86dppony2mjyoho4gzl5au927l3b0mpk
+        m: []
+        python_version: 3.12.3
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 83
+                - 98
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 51
+                - 53
+                - 71
+                - 83
+                - 98
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+            "4": 3.12.3
+            "5": 0.25.0
+            "6": 4.57.6
+            "12": 0.25.0
+            "13": linux-aarch64
+account_for_embedding_in_pipeline_split:
+    value: false
+account_for_loss_in_pipeline_split:
+    value: false
+accumulate_allreduce_grads_in_fp32:
+    value: false
+activation_func_clamp_value:
+    value: null
+adam_beta1:
+    value: 0.9
+adam_beta2:
+    value: 0.95
+adam_eps:
+    value: 1e-08
+add_bias_linear:
+    value: false
+add_position_embedding:
+    value: true
+add_qkv_bias:
+    value: false
+adlr_autoresume:
+    value: false
+adlr_autoresume_interval:
+    value: 1000
+align_grad_reduce:
+    value: true
+align_param_gather:
+    value: false
+allow_ambiguous_pad_tokens:
+    value: false
+app_tag_run_name:
+    value: null
+app_tag_run_version:
+    value: 0.0.0
+apply_query_key_layer_scaling:
+    value: false
+apply_residual_connection_post_layernorm:
+    value: false
+apply_rope_fusion:
+    value: true
+apply_wd_to_qk_layernorm:
+    value: false
+async_save:
+    value: false
+async_tensor_model_parallel_allreduce:
+    value: true
+attention_backend:
+    value: auto
+attention_dropout:
+    value: 0
+attention_output_gate:
+    value: false
+attention_softmax_in_fp32:
+    value: false
+auto_detect_ckpt_format:
+    value: false
+barrier_with_L1_time:
+    value: true
+batch_invariant_mode:
+    value: false
+bert_binary_head:
+    value: true
+bert_embedder_type:
+    value: megatron
+bert_load:
+    value: null
+bf16:
+    value: true
+bias_dropout_fusion:
+    value: true
+bias_gelu_fusion:
+    value: false
+bias_swiglu_fusion:
+    value: true
+biencoder_projection_dim:
+    value: 0
+biencoder_shared_query_context_model:
+    value: false
+block_data_path:
+    value: null
+cache_mla_latents:
+    value: false
+calc_ft_timeouts:
+    value: false
+calculate_per_token_loss:
+    value: false
+check_for_large_grads:
+    value: false
+check_for_nan_in_loss_and_grad:
+    value: false
+check_for_spiky_loss:
+    value: false
+check_weight_hash_across_dp_replicas_interval:
+    value: null
+ckpt_assume_constant_structure:
+    value: false
+ckpt_convert_format:
+    value: null
+ckpt_convert_save:
+    value: null
+ckpt_convert_update_legacy_dist_opt_format:
+    value: false
+ckpt_format:
+    value: torch_dist
+ckpt_fully_parallel_load:
+    value: false
+ckpt_fully_parallel_save:
+    value: true
+ckpt_fully_parallel_save_deprecated:
+    value: false
+ckpt_step:
+    value: null
+classes_fraction:
+    value: 1
+clip_grad:
+    value: 1
+clone_scatter_output_in_embedding:
+    value: true
+config_logger_dir:
+    value: ""
+consumed_train_samples:
+    value: 0
+consumed_valid_samples:
+    value: 0
+context_parallel_size:
+    value: 1
+cp_comm_type:
+    value:
+        - p2p
+cpu_offloading_num_layers:
+    value: 0
+create_all_gather_group:
+    value: false
+create_attention_mask_in_dataloader:
+    value: true
+cross_entropy_fusion_impl:
+    value: native
+cross_entropy_loss_fusion:
+    value: true
+cuda_graph_impl:
+    value: none
+cuda_graph_scope:
+    value: []
+cuda_graph_warmup_steps:
+    value: 3
+data_args_path:
+    value: null
+data_cache_path:
+    value: /iopsstor/scratch/cscs/course_00320/gipfelsturm/.cache/dataset
+data_parallel_random_init:
+    value: false
+data_parallel_sharding_strategy:
+    value: no_shard
+data_parallel_size:
+    value: 4
+data_path:
+    value:
+        - /capstor/store/cscs/swissai/infra01/datasets/nvidia/Nemotron-ClimbMix/climbmix_small_megatron/climbmix_small
+data_per_class_fraction:
+    value: 1
+data_sharding:
+    value: true
+dataloader_defer_npy_index_mmap:
+    value: false
+dataloader_fast_cache_load:
+    value: false
+dataloader_type:
+    value: single
+ddp_average_in_collective:
+    value: false
+ddp_bucket_size:
+    value: null
+ddp_num_buckets:
+    value: null
+ddp_pad_buckets_for_high_nccl_busbw:
+    value: false
+ddp_reduce_scatter_with_fp32_accumulation:
+    value: false
+decode_only_cuda_graphs:
+    value: false
+decoder_first_pipeline_num_layers:
+    value: null
+decoder_last_pipeline_num_layers:
+    value: null
+decoder_num_layers:
+    value: null
+decoder_seq_length:
+    value: null
+decoupled_lr:
+    value: null
+decoupled_min_lr:
+    value: null
+decrease_batch_size_if_needed:
+    value: false
+defer_embedding_wgrad_compute:
+    value: false
+delay_wgrad_compute:
+    value: false
+deprecated_use_mcore_models:
+    value: false
+deterministic_mode:
+    value: false
+dino_bottleneck_size:
+    value: 256
+dino_freeze_last_layer:
+    value: 1
+dino_head_hidden_size:
+    value: 2048
+dino_local_crops_number:
+    value: 10
+dino_local_img_size:
+    value: 96
+dino_norm_last_layer:
+    value: false
+dino_teacher_temp:
+    value: 0.07
+dino_warmup_teacher_temp:
+    value: 0.04
+dino_warmup_teacher_temp_epochs:
+    value: 30
+disable_bf16_reduced_precision_matmul:
+    value: false
+disable_chunked_prefill:
+    value: true
+disable_jit_fuser:
+    value: false
+disable_straggler_on_startup:
+    value: false
+disable_symmetric_registration:
+    value: false
+dist_ckpt_format_deprecated:
+    value: null
+dist_ckpt_optim_fully_reshardable:
+    value: false
+dist_ckpt_save_pre_mcore_014:
+    value: false
+dist_ckpt_strictness:
+    value: assume_ok_unexpected
+distrib_optim_fully_reshardable_mem_efficient:
+    value: false
+distribute_saved_activations:
+    value: false
+distributed_backend:
+    value: nccl
+distributed_timeout_minutes:
+    value: 10
+distributed_timeout_seconds_after_init:
+    value: null
+dsa_indexer_head_dim:
+    value: null
+dsa_indexer_loss_coeff:
+    value: null
+dsa_indexer_n_heads:
+    value: null
+dsa_indexer_topk:
+    value: null
+dsa_indexer_use_sparse_loss:
+    value: false
+dump_param_to_param_group_map:
+    value: null
+embedding_init_method_std:
+    value: null
+embedding_path:
+    value: null
+empty_unused_memory_level:
+    value: 0
+enable_cuda_graph:
+    value: false
+enable_experimental:
+    value: false
+enable_ft_package:
+    value: false
+enable_full_sharding_in_hsdp:
+    value: false
+enable_gloo_process_groups:
+    value: true
+enable_gpt_oss:
+    value: false
+enable_msc:
+    value: true
+enable_one_logger:
+    value: true
+encoder_num_layers:
+    value: 32
+encoder_seq_length:
+    value: 4096
+end_weight_decay:
+    value: 0.1
+eod_mask_loss:
+    value: false
+ep_overlap_early_attn_memory_release:
+    value: false
+error_injection_rate:
+    value: 0
+error_injection_type:
+    value: transient_error
+eval_interval:
+    value: 50
+eval_iters:
+    value: 0
+evidence_data_path:
+    value: null
+exit_duration_in_mins:
+    value: null
+exit_interval:
+    value: null
+exit_on_missing_checkpoint:
+    value: false
+exit_signal:
+    value: SIGTERM
+exit_signal_handler:
+    value: false
+exit_signal_handler_for_dataloader:
+    value: false
+exp_avg_dtype:
+    value: torch.float32
+exp_avg_sq_dtype:
+    value: torch.float32
+experimental_attention_variant:
+    value: null
+expert_model_parallel_size:
+    value: 1
+expert_tensor_parallel_size:
+    value: 1
+export_force_local_attention:
+    value: false
+export_kd_cfg:
+    value: null
+export_kd_teacher_ckpt_format:
+    value: null
+export_kd_teacher_load:
+    value: null
+export_kd_teacher_model_config:
+    value: null
+export_kv_cache_quant:
+    value: none
+export_legacy_megatron:
+    value: false
+export_model_type:
+    value: GPTModel
+export_moe_apply_probs_on_input:
+    value: false
+export_offline_model:
+    value: false
+export_qk_l2_norm:
+    value: false
+export_quant_cfg:
+    value: null
+export_real_quant_cfg:
+    value: None
+export_te_mcore_model:
+    value: false
+external_cuda_graph:
+    value: false
+fake_process_group:
+    value: false
+ffn_hidden_size:
+    value: 14336
+fim_data:
+    value: false
+fim_eod_token:
+    value: <|endoftext|>
+fim_fragment_rate:
+    value: null
+fim_middle_token:
+    value: <fim_middle>
+fim_no_prefix:
+    value: null
+fim_pad_token:
+    value: <fim_pad>
+fim_prefix_token:
+    value: <fim_prefix>
+fim_rate:
+    value: 0.5
+fim_split_sample:
+    value: null
+fim_spm_rate:
+    value: 0.5
+fim_suffix_token:
+    value: <fim_suffix>
+fine_grained_activation_offloading:
+    value: false
+finetune:
+    value: false
+finetune_data_split:
+    value: train
+finetune_hf_dataset:
+    value: null
+first_last_layers_bf16:
+    value: false
+flash_decode:
+    value: false
+fp4:
+    value: null
+fp4_param:
+    value: false
+fp4_quantizer_factory:
+    value: null
+fp4_recipe:
+    value: nvfp4
+fp8:
+    value: hybrid
+fp8_amax_compute_algo:
+    value: most_recent
+fp8_amax_history_len:
+    value: 1
+fp8_interval:
+    value: 1
+fp8_margin:
+    value: 0
+fp8_param_gather:
+    value: false
+fp8_quantizer_factory:
+    value: null
+fp8_recipe:
+    value: delayed
+fp8_wgrad:
+    value: true
+fp16:
+    value: false
+fp16_lm_cross_entropy:
+    value: false
+fp32_residual_connection:
+    value: false
+fsdp_double_buffer:
+    value: false
+fsdp_manual_registration:
+    value: false
+ft_num_warmup_iters:
+    value: 5
+full_validation:
+    value: false
+global_batch_size:
+    value: 256
+glu_linear_offset:
+    value: 0
+grad_reduce_in_bf16:
+    value: false
+gradient_accumulation_fusion:
+    value: true
+gradient_reduce_div_fusion:
+    value: true
+group_query_attention:
+    value: true
+grpo_clamp_eps_lower:
+    value: 0.01
+grpo_clamp_eps_upper:
+    value: 0.01
+grpo_entropy_term_weight:
+    value: 0
+grpo_filter_groups_with_same_reward:
+    value: false
+grpo_group_size:
+    value: 2
+grpo_iterations:
+    value: 2
+grpo_kl_beta:
+    value: 0.001
+grpo_prompts_per_step:
+    value: 32
+head_lr_mult:
+    value: 1
+heterogeneous_layers_config_encoded_json:
+    value: null
+heterogeneous_layers_config_path:
+    value: null
+hidden_dropout:
+    value: 0
+hidden_size:
+    value: 4096
+hierarchical_context_parallel_sizes:
+    value: null
+high_priority_stream_groups:
+    value: []
+hybrid_attention_ratio:
+    value: 0
+hybrid_context_parallel:
+    value: false
+hybrid_mlp_ratio:
+    value: 0
+hybrid_override_pattern:
+    value: null
+hysteresis:
+    value: 2
+ict_head_size:
+    value: null
+ict_load:
+    value: null
+img_h:
+    value: 224
+img_w:
+    value: 224
+indexer_batch_size:
+    value: 128
+indexer_log_interval:
+    value: 1000
+inference_batch_times_seqlen_threshold:
+    value: -1
+inference_coordinator_port:
+    value: 12346
+inference_dynamic_batching:
+    value: false
+inference_dynamic_batching_block_size:
+    value: 256
+inference_dynamic_batching_buffer_size_gb:
+    value: 40
+inference_dynamic_batching_cuda_graph_max_tokens:
+    value: 16384
+inference_dynamic_batching_cuda_graph_mixed_prefill_count:
+    value: 16
+inference_dynamic_batching_max_requests:
+    value: null
+inference_dynamic_batching_max_tokens:
+    value: null
+inference_dynamic_batching_num_cuda_graphs:
+    value: 16
+inference_dynamic_batching_paused_buffer_size_gb:
+    value: null
+inference_dynamic_batching_track_paused_request_events:
+    value: false
+inference_dynamic_batching_unified_memory_level:
+    value: 0
+inference_fuse_tp_communication:
+    value: false
+inference_logging_step_interval:
+    value: 0
+inference_max_batch_size:
+    value: 8
+inference_max_seq_length:
+    value: 2560
+inference_rng_tracker:
+    value: false
+inference_wandb_logging:
+    value: false
+init_method_std:
+    value: 0.02
+init_method_xavier_uniform:
+    value: false
+init_model_with_meta_device:
+    value: false
+initial_loss_scale:
+    value: 4294967296
+inprocess_active_world_size:
+    value: 4
+inprocess_barrier_timeout:
+    value: 120
+inprocess_completion_timeout:
+    value: 120
+inprocess_empty_cuda_cache:
+    value: false
+inprocess_granularity:
+    value: node
+inprocess_hard_timeout:
+    value: 90
+inprocess_heartbeat_interval:
+    value: 30
+inprocess_heartbeat_timeout:
+    value: 60
+inprocess_last_call_wait:
+    value: 1
+inprocess_max_iterations:
+    value: null
+inprocess_monitor_process_interval:
+    value: 1
+inprocess_monitor_thread_interval:
+    value: 1
+inprocess_progress_watchdog_interval:
+    value: 1
+inprocess_restart:
+    value: false
+inprocess_soft_timeout:
+    value: 60
+inprocess_termination_grace_time:
+    value: 1
+is_hybrid_model:
+    value: false
+iter_per_epoch:
+    value: 1250
+iterations_to_skip:
+    value: []
+keep_fp8_transpose_cache:
+    value: false
+kitchen_attention_backend:
+    value: sdpa
+kv_channels:
+    value: 128
+kv_lora_rank:
+    value: 32
+langrl_env_config:
+    value: null
+langrl_external_server:
+    value: false
+langrl_inference_server_conversation_template:
+    value: null
+langrl_inference_server_type:
+    value: inplace_megatron
+layernorm_epsilon:
+    value: 1e-05
+layernorm_zero_centered_gamma:
+    value: false
+lazy_mpu_init:
+    value: null
+legacy_tokenizer:
+    value: false
+linear_attention_freq:
+    value: null
+linear_conv_kernel_dim:
+    value: 4
+linear_key_head_dim:
+    value: 128
+linear_num_key_heads:
+    value: 16
+linear_num_value_heads:
+    value: 32
+linear_value_head_dim:
+    value: 128
+load:
+    value: null
+load_main_params_from_ckpt:
+    value: false
+local_rank:
+    value: 3
+log_device_memory_used:
+    value: false
+log_energy:
+    value: false
+log_interval:
+    value: 1
+log_loss_scale_to_tensorboard:
+    value: true
+log_max_attention_logit:
+    value: false
+log_memory_interval:
+    value: null
+log_memory_to_tensorboard:
+    value: false
+log_num_zeros_in_grad:
+    value: false
+log_params_norm:
+    value: false
+log_progress:
+    value: true
+log_straggler:
+    value: false
+log_throughput:
+    value: true
+log_timers_to_tensorboard:
+    value: true
+log_validation_ppl_to_tensorboard:
+    value: false
+log_world_size_to_tensorboard:
+    value: false
+logging_level:
+    value: null
+loss_scale:
+    value: null
+loss_scale_window:
+    value: 1000
+lr:
+    value: 0.0003
+lr_decay_iters:
+    value: null
+lr_decay_samples:
+    value: null
+lr_decay_style:
+    value: constant
+lr_warmup_fraction:
+    value: null
+lr_warmup_init:
+    value: 0
+lr_warmup_iters:
+    value: 10
+lr_warmup_samples:
+    value: 0
+lr_wsd_decay_iters:
+    value: null
+lr_wsd_decay_samples:
+    value: null
+lr_wsd_decay_style:
+    value: exponential
+main_grads_dtype:
+    value: torch.bfloat16
+main_params_dtype:
+    value: torch.float32
+make_vocab_size_divisible_by:
+    value: 128
+mamba_head_dim:
+    value: 64
+mamba_num_groups:
+    value: 8
+mamba_num_heads:
+    value: null
+mamba_state_dim:
+    value: 128
+manual_gc:
+    value: true
+manual_gc_eval:
+    value: true
+manual_gc_interval:
+    value: 50
+mask_factor:
+    value: 1
+mask_prob:
+    value: 0.15
+mask_type:
+    value: random
+masked_softmax_fusion:
+    value: true
+max_position_embeddings:
+    value: 4096
+max_seqlen_per_dp_cp_rank:
+    value: null
+max_tokens_to_oom:
+    value: 12000
+memory_snapshot_path:
+    value: snapshot.pickle
+merge_file:
+    value: /iopsstor/scratch/cscs/course_00320/gipfelsturm/data/gpt2-merges.txt
+micro_batch_size:
+    value: 1
+microbatch_group_size_per_vp_stage:
+    value: null
+mid_level_dataset_surplus:
+    value: 0.005
+min_loss_scale:
+    value: 1
+min_lr:
+    value: 0
+min_offloaded_tensor_size:
+    value: 1048576
+mlp_chunks_for_prefill:
+    value: 1
+mmap_bin_files:
+    value: true
+mock_data:
+    value: false
+modelopt_enabled:
+    value: false
+moe_apply_probs_on_input:
+    value: false
+moe_aux_loss_coeff:
+    value: 0
+moe_deepep_num_sms:
+    value: 20
+moe_enable_deepep:
+    value: false
+moe_enable_routing_replay:
+    value: false
+moe_expert_capacity_factor:
+    value: null
+moe_extended_tp:
+    value: false
+moe_ffn_hidden_size:
+    value: null
+moe_flex_dispatcher_backend:
+    value: deepep
+moe_grouped_gemm:
+    value: false
+moe_hybridep_num_sms:
+    value: 16
+moe_input_jitter_eps:
+    value: null
+moe_latent_size:
+    value: null
+moe_layer_freq:
+    value: 1
+moe_layer_recompute:
+    value: false
+moe_pad_expert_input_to_capacity:
+    value: false
+moe_pad_experts_for_cuda_graph_inference:
+    value: false
+moe_per_layer_logging:
+    value: false
+moe_permute_fusion:
+    value: false
+moe_router_bias_update_rate:
+    value: 0.001
+moe_router_dtype:
+    value: null
+moe_router_enable_expert_bias:
+    value: false
+moe_router_force_load_balancing:
+    value: false
+moe_router_fusion:
+    value: false
+moe_router_group_topk:
+    value: null
+moe_router_load_balancing_type:
+    value: aux_loss
+moe_router_num_groups:
+    value: null
+moe_router_padding_for_fp8:
+    value: false
+moe_router_padding_for_quantization:
+    value: false
+moe_router_pre_softmax:
+    value: false
+moe_router_score_function:
+    value: softmax
+moe_router_topk:
+    value: 2
+moe_router_topk_scaling_factor:
+    value: null
+moe_shared_expert_gate:
+    value: false
+moe_shared_expert_intermediate_size:
+    value: null
+moe_shared_expert_overlap:
+    value: false
+moe_token_dispatcher_type:
+    value: allgather
+moe_token_drop_policy:
+    value: probs
+moe_upcycling_granularity:
+    value: 1
+moe_use_legacy_grouped_gemm:
+    value: false
+moe_use_upcycling:
+    value: false
+moe_z_loss_coeff:
+    value: null
+mrope_section:
+    value: null
+mscale:
+    value: 1
+mscale_all_dim:
+    value: 0
+mtp_loss_scaling_factor:
+    value: 0.1
+mtp_num_layers:
+    value: null
+mtp_standalone:
+    value: false
+multi_latent_attention:
+    value: false
+multiple_validation_sets:
+    value: false
+muon_extra_scale_factor:
+    value: 1
+muon_fp32_matmul_prec:
+    value: medium
+muon_momentum:
+    value: 0.9
+muon_num_ns_steps:
+    value: 5
+muon_scale_mode:
+    value: spectral
+muon_split_qkv:
+    value: true
+muon_tp_mode:
+    value: blockwise
+muon_use_nesterov:
+    value: false
+nccl_all_reduce_for_prefill:
+    value: false
+nccl_communicator_config_path:
+    value: null
+nccl_ub:
+    value: false
+no_load_optim:
+    value: null
+no_load_rng:
+    value: null
+no_persist_layer_norm:
+    value: false
+no_rope_freq:
+    value: null
+no_save_optim:
+    value: null
+no_save_rng:
+    value: null
+no_weight_decay_cond_type:
+    value: null
+non_persistent_ckpt_type:
+    value: null
+non_persistent_global_ckpt_dir:
+    value: null
+non_persistent_local_ckpt_algo:
+    value: fully_parallel
+non_persistent_local_ckpt_dir:
+    value: null
+non_persistent_save_interval:
+    value: null
+normalization:
+    value: RMSNorm
+num_attention_heads:
+    value: 32
+num_channels:
+    value: 3
+num_classes:
+    value: 1000
+num_dataset_builder_threads:
+    value: 1
+num_distributed_optimizer_instances:
+    value: 1
+num_experts:
+    value: null
+num_layers:
+    value: 32
+num_layers_at_end_in_bf16:
+    value: 1
+num_layers_at_start_in_bf16:
+    value: 1
+num_layers_per_virtual_pipeline_stage:
+    value: null
+num_query_groups:
+    value: 8
+num_virtual_stages_per_pipeline_rank:
+    value: null
+num_workers:
+    value: 1
+object_storage_cache_path:
+    value: null
+offload_modules:
+    value: []
+one_logger_async:
+    value: false
+one_logger_project:
+    value: megatron-lm
+one_logger_run_name:
+    value: null
+onnx_safe:
+    value: null
+openai_gelu:
+    value: false
+optimizer:
+    value: adam
+optimizer_cpu_offload:
+    value: false
+optimizer_offload_fraction:
+    value: 1
+outer_dp_sharding_strategy:
+    value: no_shard
+output_bert_embeddings:
+    value: false
+overlap_cpu_optimizer_d2h_h2d:
+    value: false
+overlap_grad_reduce:
+    value: true
+overlap_moe_expert_parallel_comm:
+    value: false
+overlap_p2p_comm:
+    value: false
+overlap_p2p_comm_warmup_flush:
+    value: false
+overlap_param_gather:
+    value: true
+overlap_param_gather_with_optimizer_step:
+    value: false
+override_opt_param_scheduler:
+    value: false
+padded_vocab_size:
+    value: 50304
+params_dtype:
+    value: torch.bfloat16
+patch_dim:
+    value: 16
+per_dataset_sequences_path:
+    value: null
+per_split_data_args_path:
+    value: null
+perform_initialization:
+    value: true
+perform_rl_step:
+    value: false
+phase_transition_iterations:
+    value: null
+pin_cpu_grads:
+    value: true
+pin_cpu_params:
+    value: true
+pipeline_model_parallel_comm_backend:
+    value: null
+pipeline_model_parallel_layout:
+    value: null
+pipeline_model_parallel_size:
+    value: 1
+position_embedding_type:
+    value: rope
+pretrained_checkpoint:
+    value: null
+profile:
+    value: false
+profile_ranks:
+    value:
+        - 0
+profile_step_end:
+    value: 12
+profile_step_start:
+    value: 10
+q_lora_rank:
+    value: null
+qk_clip:
+    value: false
+qk_clip_alpha:
+    value: 0.5
+qk_clip_threshold:
+    value: 100
+qk_head_dim:
+    value: 128
+qk_l2_norm:
+    value: false
+qk_layernorm:
+    value: false
+qk_pos_emb_head_dim:
+    value: 64
+query_in_block_prob:
+    value: 0.1
+quick_geglu:
+    value: false
+rampup_batch_size:
+    value: null
+rank:
+    value: 3
+recompute_granularity:
+    value: null
+recompute_method:
+    value: null
+recompute_modules:
+    value: null
+recompute_num_layers:
+    value: null
+record_memory_history:
+    value: false
+refit_method:
+    value: gloo
+relative_attention_max_distance:
+    value: 128
+relative_attention_num_buckets:
+    value: 32
+replication:
+    value: false
+replication_factor:
+    value: 2
+replication_jump:
+    value: null
+rerun_mode:
+    value: validate_results
+reset_attention_mask:
+    value: false
+reset_position_ids:
+    value: false
+result_rejected_tracker_filename:
+    value: null
+retriever_report_topk_accuracies:
+    value: []
+retriever_score_scaling:
+    value: false
+reuse_grad_buf_for_mxfp8_param_ag:
+    value: false
+rl_default_temperature:
+    value: 1
+rl_default_top_k:
+    value: -1
+rl_default_top_p:
+    value: 0
+rl_importance_sampling_truncation_coef:
+    value: null
+rl_inference_expert_model_parallel_size:
+    value: null
+rl_inference_expert_tensor_model_parallel_size:
+    value: null
+rl_inference_logprobs_is_correction:
+    value: false
+rl_inference_model_unified_memory_level:
+    value: 0
+rl_inference_pipeline_model_parallel_size:
+    value: null
+rl_inference_tensor_model_parallel_size:
+    value: null
+rl_offload_inference_model_weights_when_idle:
+    value: false
+rl_offload_kv_cache_during_training:
+    value: false
+rl_offload_optimizer_during_inference:
+    value: false
+rl_parallel_generation_tasks:
+    value: 512
+rl_partial_rollouts:
+    value: false
+rl_prompts_per_eval:
+    value: 32
+rl_remove_kv_cache_during_training:
+    value: false
+rl_reset_cuda_graphs:
+    value: false
+rl_sequence_packing_algo:
+    value: fifo
+rl_sequence_packing_max_sequences_per_bin:
+    value: 50
+rl_skip_bos_token:
+    value: false
+rl_training_cuda_graphs:
+    value: false
+rl_use_sequence_packing:
+    value: false
+rl_verify_model_weights_swap:
+    value: false
+rope_scaling_factor:
+    value: 8
+rope_type:
+    value: null
+rotary_base:
+    value: 10000
+rotary_interleaved:
+    value: false
+rotary_percent:
+    value: 1
+rotary_scaling_factor:
+    value: 1
+rotary_seq_len_interpolation_factor:
+    value: null
+run_workload_inspector_server:
+    value: false
+sample_rate:
+    value: 1
+save:
+    value: null
+save_dgrads_interval:
+    value: null
+save_interval:
+    value: null
+save_retain_interval:
+    value: null
+save_wgrads_interval:
+    value: null
+scatter_gather_tensors_in_pipeline:
+    value: true
+seed:
+    value: 42
+seq_length:
+    value: 4096
+sequence_parallel:
+    value: false
+sft:
+    value: false
+sft_tokenizer_prompt_format:
+    value: nemotron-h-aligned
+sgd_momentum:
+    value: 0.9
+sharp_enabled_group:
+    value: null
+short_seq_prob:
+    value: 0.1
+skip_train:
+    value: false
+skipped_train_samples:
+    value: 0
+slurm_job_name:
+    value: gipfel-throughput-8b-50s-1n-auto-fp8hybrid
+softmax_type:
+    value: vanilla
+spec:
+    value: null
+split:
+    value: 99,1,0
+squared_relu:
+    value: false
+start_weight_decay:
+    value: 0.1
+straggler_ctrlr_port:
+    value: 65535
+straggler_minmax_count:
+    value: 1
+strict_fsdp_dtensor_load:
+    value: true
+suggested_communication_unit_size:
+    value: null
+swiglu:
+    value: true
+swin_backbone_type:
+    value: tiny
+symmetric_ar_type:
+    value: null
+te_precision_config_file:
+    value: null
+te_rng_tracker:
+    value: false
+tensor_model_parallel_size:
+    value: 1
+tensorboard_dir:
+    value: null
+tensorboard_log_interval:
+    value: 1
+tensorboard_queue_size:
+    value: 1000
+test_data_path:
+    value: null
+test_mode:
+    value: false
+tiktoken_num_special_tokens:
+    value: 1000
+tiktoken_pattern:
+    value: null
+tiktoken_special_tokens:
+    value: null
+timing_log_level:
+    value: 0
+timing_log_option:
+    value: minmax
+titles_data_path:
+    value: null
+tokenizer_hf_include_special_tokens:
+    value: false
+tokenizer_hf_use_fast:
+    value: false
+tokenizer_metadata:
+    value: null
+tokenizer_model:
+    value: null
+tokenizer_sentencepiece_legacy:
+    value: false
+tokenizer_special_tokens:
+    value: null
+tokenizer_type:
+    value: GPT2BPETokenizer
+torch_fsdp2_reshard_after_forward:
+    value: true
+tp_comm_bootstrap_backend:
+    value: nccl
+tp_comm_bulk_dgrad:
+    value: true
+tp_comm_bulk_wgrad:
+    value: true
+tp_comm_overlap:
+    value: false
+tp_comm_overlap_ag:
+    value: true
+tp_comm_overlap_cfg:
+    value: null
+tp_comm_overlap_rs:
+    value: true
+tp_comm_overlap_rs_dgrad:
+    value: false
+tp_comm_split_ag:
+    value: true
+tp_comm_split_rs:
+    value: true
+train_data_path:
+    value: null
+train_iters:
+    value: 50
+train_samples:
+    value: null
+train_sync_interval:
+    value: null
+transformer_impl:
+    value: transformer_engine
+transformer_pipeline_model_parallel_size:
+    value: 1
+trust_remote_code:
+    value: false
+untie_embeddings_and_output_weights:
+    value: true
+use_checkpoint_args:
+    value: false
+use_checkpoint_opt_param_scheduler:
+    value: false
+use_cpu_initialization:
+    value: null
+use_dist_ckpt:
+    value: true
+use_dist_ckpt_deprecated:
+    value: false
+use_distributed_optimizer:
+    value: true
+use_flash_attn:
+    value: false
+use_fused_weighted_squared_relu:
+    value: false
+use_kitchen_attention:
+    value: false
+use_legacy_models:
+    value: false
+use_legacy_static_engine:
+    value: false
+use_mamba_mem_eff_path:
+    value: true
+use_megatron_fsdp:
+    value: false
+use_mp_args_from_checkpoint_args:
+    value: false
+use_one_sent_docs:
+    value: false
+use_persistent_ckpt_worker:
+    value: false
+use_precision_aware_optimizer:
+    value: true
+use_pytorch_profiler:
+    value: false
+use_ring_exchange_p2p:
+    value: false
+use_rope_scaling:
+    value: false
+use_rotary_position_embeddings:
+    value: false
+use_sharp:
+    value: false
+use_te_activation_func:
+    value: false
+use_tokenizer_model_from_checkpoint_args:
+    value: true
+use_torch_fsdp2:
+    value: false
+use_torch_optimizer_for_cpu_offload:
+    value: false
+use_tp_pp_dp_mapping:
+    value: false
+v_head_dim:
+    value: 128
+valid_data_path:
+    value: null
+variable_seq_lengths:
+    value: false
+virtual_pipeline_model_parallel_size:
+    value: null
+vision_backbone_type:
+    value: vit
+vision_pretraining:
+    value: false
+vision_pretraining_type:
+    value: classify
+vocab_extra_ids:
+    value: 0
+vocab_file:
+    value: /iopsstor/scratch/cscs/course_00320/gipfelsturm/data/gpt2-vocab.json
+vocab_size:
+    value: null
+wandb_entity:
+    value: null
+wandb_exp_name:
+    value: throughput-8b-1n-2319765
+wandb_project:
+    value: gipfelsturm
+wandb_save_dir:
+    value: /iopsstor/scratch/cscs/course_00320/gipfelsturm/runs/gipfelsturm/throughput-8b-1n
+weight_decay:
+    value: 0.1
+weight_decay_incr_style:
+    value: constant
+wgrad_deferral_limit:
+    value: 0
+window_attn_skip_freq:
+    value: null
+window_size:
+    value: null
+world_size:
+    value: 4
+yaml_cfg:
+    value: null
